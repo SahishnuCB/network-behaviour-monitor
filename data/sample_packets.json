@@ -1,0 +1,26 @@
+[
+    {
+        "src_ip": "192.168.1.10",
+        "dst_ip": "142.250.195.14",
+        "protocol": "TCP",
+        "src_port": 51544,
+        "dst_port": 443,
+        "size": 1200
+    },
+    {
+        "src_ip": "192.168.1.10",
+        "dst_ip": "142.250.195.14",
+        "protocol": "TCP",
+        "src_port": 51544,
+        "dst_port": 443,
+        "size": 900
+    },
+    {
+        "src_ip": "192.168.1.10",
+        "dst_ip": "8.8.8.8",
+        "protocol": "UDP",
+        "src_port": 53021,
+        "dst_port": 53,
+        "size": 80
+    }
+]

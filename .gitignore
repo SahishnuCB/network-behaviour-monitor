@@ -9,8 +9,12 @@ venv/
 
 # Logs and generated data
 logs/
-data/
 reports/
+
+# Generated data
+data/*
+!data/sample_packets.json
+
 
 # OS/editor files
 .DS_Store
