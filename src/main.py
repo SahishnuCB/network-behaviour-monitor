@@ -59,6 +59,25 @@ def group_packets_into_flows(packets):
     return list(flows.values())
 
 
+def build_baseline(flows):
+    baseline = {
+        "known_src_ips": set(),
+        "known_dst_ips": set(),
+        "known_dst_ports": set(),
+        "known_protocols": set(),
+        "known_services": set(),
+    }
+
+    for flow in flows:
+        baseline["known_src_ips"].add(flow["src_ip"])
+        baseline["known_dst_ips"].add(flow["dst_ip"])
+        baseline["known_dst_ports"].add(flow["dst_port"])
+        baseline["known_protocols"].add(flow["protocol"])
+        baseline["known_services"].add(flow["service"])
+
+    return baseline
+
+
 def print_flows(flows):
     print("\nNetwork Flows")
     print("-" * 80)
@@ -74,10 +93,27 @@ def print_flows(flows):
         )
 
 
+def format_set(values):
+    return ", ".join(str(value) for value in sorted(values))
+
+
+def print_baseline(baseline):
+    print("\nBaseline Profile")
+    print("-" * 80)
+    print(f'Known Source IPs: {format_set(baseline["known_src_ips"])}')
+    print(f'Known Destination IPs: {format_set(baseline["known_dst_ips"])}')
+    print(f'Known Destination Ports: {format_set(baseline["known_dst_ports"])}')
+    print(f'Known Protocols: {format_set(baseline["known_protocols"])}')
+    print(f'Known Services: {format_set(baseline["known_services"])}')
+
+
 def main():
     packets = load_packets("data/sample_packets.json")
     flows = group_packets_into_flows(packets)
+    baseline = build_baseline(flows)
+
     print_flows(flows)
+    print_baseline(baseline)
 
 
 if __name__ == "__main__":
