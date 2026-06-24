@@ -78,8 +78,24 @@ def build_baseline(flows):
     return baseline
 
 
-def print_flows(flows):
-    print("\nNetwork Flows")
+def detect_anomalies(flows, baseline):
+    alerts = []
+
+    for flow in flows:
+        if flow["dst_ip"] not in baseline["known_dst_ips"]:
+            alerts.append(
+                {
+                    "type": "New Destination IP",
+                    "flow": flow,
+                    "reason": f'Destination IP {flow["dst_ip"]} was not seen in the baseline.',
+                }
+            )
+
+    return alerts
+
+
+def print_flows(flows, title="Network Flows"):
+    print(f"\n{title}")
     print("-" * 80)
 
     for flow in flows:
@@ -91,6 +107,27 @@ def print_flows(flows):
             f'Packets: {flow["packet_count"]} | '
             f'Total Size: {flow["total_size"]} bytes'
         )
+
+
+def print_alerts(alerts):
+    print("\nAlerts")
+    print("-" * 80)
+
+    if not alerts:
+        print("No unusual activity detected.")
+        return
+
+    for alert in alerts:
+        flow = alert["flow"]
+
+        print(f'Type: {alert["type"]}')
+        print(f'Reason: {alert["reason"]}')
+        print(
+            f'Flow: {flow["src_ip"]}:{flow["src_port"]} -> '
+            f'{flow["dst_ip"]}:{flow["dst_port"]} '
+            f'({flow["protocol"]}) | Service: {flow["service"]}'
+        )
+        print("-" * 80)
 
 
 def format_set(values):
@@ -108,12 +145,18 @@ def print_baseline(baseline):
 
 
 def main():
-    packets = load_packets("data/sample_packets.json")
-    flows = group_packets_into_flows(packets)
-    baseline = build_baseline(flows)
+    baseline_packets = load_packets("data/sample_packets.json")
+    baseline_flows = group_packets_into_flows(baseline_packets)
+    baseline = build_baseline(baseline_flows)
 
-    print_flows(flows)
+    test_packets = load_packets("data/test_packets.json")
+    test_flows = group_packets_into_flows(test_packets)
+    alerts = detect_anomalies(test_flows, baseline)
+
+    print_flows(baseline_flows, "Baseline Traffic Flows")
     print_baseline(baseline)
+    print_flows(test_flows, "Test Traffic Flows")
+    print_alerts(alerts)
 
 
 if __name__ == "__main__":
