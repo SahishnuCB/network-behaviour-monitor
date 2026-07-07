@@ -82,21 +82,28 @@ def detect_anomalies(flows, baseline):
     alerts = []
 
     for flow in flows:
+        reasons = []
+        risk_score = 0
+
         if flow["dst_ip"] not in baseline["known_dst_ips"]:
-            alerts.append(
-                {
-                    "type": "New Destination IP",
-                    "flow": flow,
-                    "reason": f'Destination IP {flow["dst_ip"]} was not seen in the baseline.',
-                }
+            reasons.append(
+                f'Destination IP {flow["dst_ip"]} was not seen in the baseline.'
             )
+            risk_score += 2
 
         if flow["dst_port"] not in baseline["known_dst_ports"]:
+            reasons.append(
+                f'Destination port {flow["dst_port"]} was not seen in the baseline.'
+            )
+            risk_score += 2
+
+        if reasons:
             alerts.append(
                 {
-                    "type": "New Destination Port",
+                    "type": "Suspicious Flow",
                     "flow": flow,
-                    "reason": f'Destination port {flow["dst_port"]} was not seen in the baseline.',
+                    "risk_score": risk_score,
+                    "reasons": reasons,
                 }
             )
 
@@ -130,12 +137,17 @@ def print_alerts(alerts):
         flow = alert["flow"]
 
         print(f'Type: {alert["type"]}')
-        print(f'Reason: {alert["reason"]}')
+        print(f'Risk Score: {alert["risk_score"]}')
         print(
             f'Flow: {flow["src_ip"]}:{flow["src_port"]} -> '
             f'{flow["dst_ip"]}:{flow["dst_port"]} '
             f'({flow["protocol"]}) | Service: {flow["service"]}'
         )
+
+        print("Reasons:")
+        for reason in alert["reasons"]:
+            print(f"- {reason}")
+
         print("-" * 80)
 
 
