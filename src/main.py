@@ -91,6 +91,15 @@ def detect_anomalies(flows, baseline):
                 }
             )
 
+        if flow["dst_port"] not in baseline["known_dst_ports"]:
+            alerts.append(
+                {
+                    "type": "New Destination Port",
+                    "flow": flow,
+                    "reason": f'Destination port {flow["dst_port"]} was not seen in the baseline.',
+                }
+            )
+
     return alerts
 
 
