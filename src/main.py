@@ -103,6 +103,7 @@ def detect_anomalies(flows, baseline):
                     "type": "Suspicious Flow",
                     "flow": flow,
                     "risk_score": risk_score,
+                    "risk_level": get_risk_level(risk_score),
                     "reasons": reasons,
                 }
             )
@@ -125,6 +126,14 @@ def print_flows(flows, title="Network Flows"):
         )
 
 
+def get_risk_level(risk_score):
+    if risk_score >= 5:
+        return "High"
+    elif risk_score >= 3:
+        return "Medium"
+    else:
+        return "Low"
+
 def print_alerts(alerts):
     print("\nAlerts")
     print("-" * 80)
@@ -138,6 +147,7 @@ def print_alerts(alerts):
 
         print(f'Type: {alert["type"]}')
         print(f'Risk Score: {alert["risk_score"]}')
+        print(f'Risk Level: {alert["risk_level"]}')
         print(
             f'Flow: {flow["src_ip"]}:{flow["src_port"]} -> '
             f'{flow["dst_ip"]}:{flow["dst_port"]} '
