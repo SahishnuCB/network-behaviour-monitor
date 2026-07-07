@@ -97,6 +97,12 @@ def detect_anomalies(flows, baseline):
             )
             risk_score += 2
 
+        if flow["service"] == "Unknown":
+            reasons.append(
+                f'Service for destination port {flow["dst_port"]} is unknown.'
+            )
+            risk_score += 1
+
         if reasons:
             alerts.append(
                 {
@@ -134,6 +140,7 @@ def get_risk_level(risk_score):
     else:
         return "Low"
 
+
 def print_alerts(alerts):
     print("\nAlerts")
     print("-" * 80)
@@ -159,6 +166,24 @@ def print_alerts(alerts):
             print(f"- {reason}")
 
         print("-" * 80)
+
+
+def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts):
+    result = {
+        "baseline_flows": baseline_flows,
+        "baseline_profile": {
+            "known_src_ips": list(baseline["known_src_ips"]),
+            "known_dst_ips": list(baseline["known_dst_ips"]),
+            "known_dst_ports": list(baseline["known_dst_ports"]),
+            "known_protocols": list(baseline["known_protocols"]),
+            "known_services": list(baseline["known_services"]),
+        },
+        "test_flows": test_flows,
+        "alerts": alerts,
+    }
+
+    with open(file_path, "w") as file:
+        json.dump(result, file, indent=4)
 
 
 def format_set(values):
@@ -188,6 +213,9 @@ def main():
     print_baseline(baseline)
     print_flows(test_flows, "Test Traffic Flows")
     print_alerts(alerts)
+    save_analysis_result(
+        "data/analysis_result.json", baseline_flows, baseline, test_flows, alerts
+    )
 
 
 if __name__ == "__main__":

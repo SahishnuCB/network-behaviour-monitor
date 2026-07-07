@@ -1,0 +1,89 @@
+{
+    "baseline_flows": [
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "142.250.195.14",
+            "protocol": "TCP",
+            "src_port": 51544,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 2100
+        },
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "8.8.8.8",
+            "protocol": "UDP",
+            "src_port": 53021,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 80
+        }
+    ],
+    "baseline_profile": {
+        "known_src_ips": [
+            "192.168.1.10"
+        ],
+        "known_dst_ips": [
+            "142.250.195.14",
+            "8.8.8.8"
+        ],
+        "known_dst_ports": [
+            443,
+            53
+        ],
+        "known_protocols": [
+            "TCP",
+            "UDP"
+        ],
+        "known_services": [
+            "HTTPS",
+            "DNS"
+        ]
+    },
+    "test_flows": [
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "142.250.195.14",
+            "protocol": "TCP",
+            "src_port": 51544,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 1,
+            "total_size": 1000
+        },
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "45.33.32.156",
+            "protocol": "TCP",
+            "src_port": 52000,
+            "dst_port": 4444,
+            "service": "Unknown",
+            "packet_count": 1,
+            "total_size": 700
+        }
+    ],
+    "alerts": [
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "192.168.1.10",
+                "dst_ip": "45.33.32.156",
+                "protocol": "TCP",
+                "src_port": 52000,
+                "dst_port": 4444,
+                "service": "Unknown",
+                "packet_count": 1,
+                "total_size": 700
+            },
+            "risk_score": 5,
+            "risk_level": "High",
+            "reasons": [
+                "Destination IP 45.33.32.156 was not seen in the baseline.",
+                "Destination port 4444 was not seen in the baseline.",
+                "Service for destination port 4444 is unknown."
+            ]
+        }
+    ]
+}
