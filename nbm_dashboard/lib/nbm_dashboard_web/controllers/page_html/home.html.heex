@@ -7,6 +7,7 @@
 
   <div style="background: #1b1b1b; padding: 12px; border: 1px solid #333; margin: 16px 0 24px 0;">
     <b>Summary:</b>
+    Generated At: <%= @analysis_result["generated_at"] %> |
     Total Test Flows: <%= length(@analysis_result["test_flows"]) %> |
     Total Alerts: <%= length(@analysis_result["alerts"]) %>
   </div>
