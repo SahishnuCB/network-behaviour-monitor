@@ -28,7 +28,7 @@
     <p><b>Known Services:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_services"], ", ") %></p>
   </div>
 
-    <h2>Baseline Traffic Flows</h2>
+  <h2>Baseline Traffic Flows</h2>
 
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
     <thead>
@@ -72,6 +72,53 @@
       <% end %>
     </tbody>
   </table>
+
+  <h2>Network Graph View</h2>
+
+  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
+    <p style="color: #aaa; margin-top: 0;">
+      Temporary graph-style view of observed source to destination conenctions
+    </p>
+
+    <%= for flow <- @analysis_result["test_flows"] do %>
+      <% matching_alert =
+        Enum.find(@analysis_result["alerts"], fn alert ->
+          alert_flow = alert["flow"]
+            alert_flow["src_ip"] == flow["src_ip"] &&
+            alert_flow["dst_ip"] == flow["dst_ip"] &&
+            alert_flow["dest_port"] == flow["dest_port"]
+        end)
+      %>
+
+      <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #444; background: #111; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="border: 1px solid #555; padding: 6px 10px; background: #1b1b1b; font-weight: bold;">
+          <%= flow["src_ip"] %>
+        </span>
+
+        <span style="color: #888; font-size: 18px;">
+          →
+        </span>
+
+        <span style="border: 1px solid #555; padding: 6px 10px; background: #1b1b1b; font-weight: bold;">
+          <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
+        </span>
+
+        <span style="color: #aaa;">
+          <%= flow["protocol"] %> / <%= flow["service"] %>
+        </span>
+
+        <%= if matching_alert do %>
+          <span style="color: #ff7777; font-weight: bold;">
+            <%= matching_alert["risk_level"] %> RISK
+          </span>
+        <% else %>
+          <span style="color: lightgreen; font-weight: bold;">
+            NORMAL
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <h2>Test Traffic Flows</h2>
 
