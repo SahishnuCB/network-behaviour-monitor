@@ -10,8 +10,11 @@
     Generated At: <%= @analysis_result["generated_at"] %> |
     Total Test Flows: <%= length(@analysis_result["test_flows"]) %> |
     Total Alerts: <%= length(@analysis_result["alerts"]) %>
-  </div>
 
+    <p style="color: #888; font-size: 14px;">
+      To refresh analysis data, run: <code> py .\src\main.py</code> from the project root.
+    </p>
+  </div>
 
   <hr style="border-color: #333;">
 
@@ -24,6 +27,51 @@
     <p><b>Known Protocols:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_protocols"], ", ") %></p>
     <p><b>Known Services:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_services"], ", ") %></p>
   </div>
+
+    <h2>Baseline Traffic Flows</h2>
+
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+    <thead>
+      <tr style="background: #222;">
+        <th style="border: 1px solid #444; padding: 8px;">Source</th>
+        <th style="border: 1px solid #444; padding: 8px;">Destination</th>
+        <th style="border: 1px solid #444; padding: 8px;">Protocol</th>
+        <th style="border: 1px solid #444; padding: 8px;">Service</th>
+        <th style="border: 1px solid #444; padding: 8px;">Packets</th>
+        <th style="border: 1px solid #444; padding: 8px;">Total Size</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <%= for flow <- @analysis_result["baseline_flows"] do %>
+        <tr>
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["src_ip"] %>:<%= flow["src_port"] %>
+          </td>
+
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
+          </td>
+
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["protocol"] %>
+          </td>
+
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["service"] %>
+          </td>
+
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["packet_count"] %>
+          </td>
+
+          <td style="border: 1px solid #444; padding: 8px;">
+            <%= flow["total_size"] %> bytes
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 
   <h2>Test Traffic Flows</h2>
 
