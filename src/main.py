@@ -1,5 +1,5 @@
 import json
-
+from datetime import datetime
 
 def load_packets(file_path):
     with open(file_path, "r") as file:
@@ -169,7 +169,8 @@ def print_alerts(alerts):
 
 
 def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts):
-    result = {
+    result = {\
+        "generated_at": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
         "baseline_flows": baseline_flows,
         "baseline_profile": {
             "known_src_ips": list(baseline["known_src_ips"]),

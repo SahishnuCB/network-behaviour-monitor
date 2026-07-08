@@ -1,4 +1,5 @@
 {
+    "generated_at": "08-07-2026 16:32:50",
     "baseline_flows": [
         {
             "src_ip": "192.168.1.10",
@@ -38,8 +39,8 @@
             "UDP"
         ],
         "known_services": [
-            "HTTPS",
-            "DNS"
+            "DNS",
+            "HTTPS"
         ]
     },
     "test_flows": [
