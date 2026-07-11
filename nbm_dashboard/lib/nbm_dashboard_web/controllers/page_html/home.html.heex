@@ -86,7 +86,7 @@
           alert_flow = alert["flow"]
             alert_flow["src_ip"] == flow["src_ip"] &&
             alert_flow["dst_ip"] == flow["dst_ip"] &&
-            alert_flow["dest_port"] == flow["dest_port"]
+            alert_flow["dst_port"] == flow["dst_port"]
         end)
       %>
 
@@ -113,6 +113,37 @@
           </span>
         <% else %>
           <span style="color: lightgreen; font-weight: bold;">
+            NORMAL
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <h2> Activity Log</h2>
+
+  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
+    <p style="color: #aaa; margin-top: 0;">
+      Temporary log-style view of observed source to destination conenctions
+    </p>
+
+    <%= for flow <- @analysis_result["test_flows"] do %>
+      <% matching_alert =
+        Enum.find(@analysis_result["alerts"], fn alert ->
+          alert_flow = alert["flow"]
+            alert_flow["src_ip"] == flow["src_ip"] &&
+            alert_flow["dst_ip"] == flow["dst_ip"] &&
+            alert_flow["dest_port"] == flow["dest_port"]
+        end)
+      %>
+
+      <div style="border-bottom: 1px solid #333; padding: 10px 0;">
+        <%= if matching_alert do %>
+          <span style="color: #ff7777; font-weight: bold;">
+            [<%= matching_alert["risk_level"] %> Risk ]
+          </span>
+        <% else %>
+          <span style="margin: 0; color: lightgreen; font-weight: bold;">
             NORMAL
           </span>
         <% end %>
