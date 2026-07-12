@@ -14,5 +14,21 @@
         "src_port": 52000,
         "dst_port": 4444,
         "size": 700
+    },
+    {
+        "src_ip": "192.168.1.10",
+        "dst_ip": "129.6.15.28",
+        "protocol": "UDP",
+        "src_port": 12345,
+        "dst_port": 123,
+        "size": 90
+    },
+    {
+        "src_ip": "192.168.1.10",
+        "dst_ip": "1.1.1.1",
+        "protocol": "ICMP",
+        "src_port": 0,
+        "dst_port": 0,
+        "size": 64
     }
 ]

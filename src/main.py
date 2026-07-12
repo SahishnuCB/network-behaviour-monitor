@@ -21,11 +21,16 @@ def get_service_name(port):
     common_ports = {
         21: "FTP",
         22: "SSH",
+        25: "SMTP",
         53: "DNS",
+        67: "DHCP Server",
+        68: "DHCP Client",
         80: "HTTP",
         110: "POP3",
+        123: "NTP",
         143: "IMAP",
         443: "HTTPS",
+        990: "FTPS",
         993: "IMAPS",
         995: "POP3S",
         3306: "MySQL",
@@ -91,17 +96,30 @@ def detect_anomalies(flows, baseline):
             )
             risk_score += 2
 
-        if flow["dst_port"] not in baseline["known_dst_ports"]:
-            reasons.append(
-                f'Destination port {flow["dst_port"]} was not seen in the baseline.'
-            )
+        if flow["protocol"] not in baseline["known_protocols"]:
+            reasons.append(f'Protocol {flow["protocol"]} was not seen in the baseline.')
             risk_score += 2
 
-        if flow["service"] == "Unknown":
-            reasons.append(
-                f'Service for destination port {flow["dst_port"]} is unknown.'
-            )
-            risk_score += 1
+        if flow["protocol"] in {"TCP", "UDP"}:
+            if flow["dst_port"] not in baseline["known_dst_ports"]:
+                if flow["service"] == "Unknown":
+                    reasons.append(
+                        f'Destination port {flow["dst_port"]} was not seen in the '
+                        "baseline and is not mapped to a common service."
+                    )
+                    risk_score += 2
+                else:
+                    reasons.append(
+                        f'Destination port {flow["dst_port"]} was not seen in the '
+                        f'baseline, but it is commonly used for {flow["service"]}.'
+                    )
+                    risk_score += 1
+
+            if flow["service"] == "Unknown":
+                reasons.append(
+                    f'Service for destination port {flow["dst_port"]} is unknown.'
+                )
+                risk_score += 1
 
         if reasons:
             alerts.append(

@@ -1,5 +1,5 @@
 {
-    "generated_at": "08-07-2026 16:32:50",
+    "generated_at": "12-07-2026 13:30:55",
     "baseline_flows": [
         {
             "src_ip": "192.168.1.10",
@@ -27,16 +27,16 @@
             "192.168.1.10"
         ],
         "known_dst_ips": [
-            "142.250.195.14",
-            "8.8.8.8"
+            "8.8.8.8",
+            "142.250.195.14"
         ],
         "known_dst_ports": [
             443,
             53
         ],
         "known_protocols": [
-            "TCP",
-            "UDP"
+            "UDP",
+            "TCP"
         ],
         "known_services": [
             "DNS",
@@ -63,6 +63,26 @@
             "service": "Unknown",
             "packet_count": 1,
             "total_size": 700
+        },
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "129.6.15.28",
+            "protocol": "UDP",
+            "src_port": 12345,
+            "dst_port": 123,
+            "service": "NTP",
+            "packet_count": 1,
+            "total_size": 90
+        },
+        {
+            "src_ip": "192.168.1.10",
+            "dst_ip": "1.1.1.1",
+            "protocol": "ICMP",
+            "src_port": 0,
+            "dst_port": 0,
+            "service": "Unknown",
+            "packet_count": 1,
+            "total_size": 64
         }
     ],
     "alerts": [
@@ -82,8 +102,46 @@
             "risk_level": "High",
             "reasons": [
                 "Destination IP 45.33.32.156 was not seen in the baseline.",
-                "Destination port 4444 was not seen in the baseline.",
+                "Destination port 4444 was not seen in the baseline and is not mapped to a common service.",
                 "Service for destination port 4444 is unknown."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "192.168.1.10",
+                "dst_ip": "129.6.15.28",
+                "protocol": "UDP",
+                "src_port": 12345,
+                "dst_port": 123,
+                "service": "NTP",
+                "packet_count": 1,
+                "total_size": 90
+            },
+            "risk_score": 3,
+            "risk_level": "Medium",
+            "reasons": [
+                "Destination IP 129.6.15.28 was not seen in the baseline.",
+                "Destination port 123 was not seen in the baseline, but it is commonly used for NTP."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "192.168.1.10",
+                "dst_ip": "1.1.1.1",
+                "protocol": "ICMP",
+                "src_port": 0,
+                "dst_port": 0,
+                "service": "Unknown",
+                "packet_count": 1,
+                "total_size": 64
+            },
+            "risk_score": 4,
+            "risk_level": "Medium",
+            "reasons": [
+                "Destination IP 1.1.1.1 was not seen in the baseline.",
+                "Protocol ICMP was not seen in the baseline."
             ]
         }
     ]
