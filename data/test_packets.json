@@ -29,6 +29,6 @@
         "protocol": "ICMP",
         "src_port": 0,
         "dst_port": 0,
-        "size": 64
+        "size": 2000000
     }
 ]

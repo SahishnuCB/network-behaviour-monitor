@@ -121,6 +121,18 @@ def detect_anomalies(flows, baseline):
                 )
                 risk_score += 1
 
+        if flow["total_size"] > 1_000_000:
+            reasons.append(
+                f'Total size of {flow["total_size"]} bytes exceeds the threshold of 1,000,000 bytes.'
+            )
+            risk_score += 2
+
+        if flow["packet_count"] > 1000:
+            reasons.append(
+                f'Packet count of {flow["packet_count"]} exceeds the threshold of 1000 packets.'
+            )
+            risk_score += 2
+
         if reasons:
             alerts.append(
                 {

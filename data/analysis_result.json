@@ -1,5 +1,5 @@
 {
-    "generated_at": "12-07-2026 13:30:55",
+    "generated_at": "12-07-2026 19:01:27",
     "baseline_flows": [
         {
             "src_ip": "192.168.1.10",
@@ -35,8 +35,8 @@
             53
         ],
         "known_protocols": [
-            "UDP",
-            "TCP"
+            "TCP",
+            "UDP"
         ],
         "known_services": [
             "DNS",
@@ -81,8 +81,8 @@
             "src_port": 0,
             "dst_port": 0,
             "service": "Unknown",
-            "packet_count": 1,
-            "total_size": 64
+            "packet_count": 3,
+            "total_size": 6000000
         }
     ],
     "alerts": [
@@ -134,14 +134,16 @@
                 "src_port": 0,
                 "dst_port": 0,
                 "service": "Unknown",
-                "packet_count": 1,
-                "total_size": 64
+                "packet_count": 3,
+                "total_size": 6000000
             },
-            "risk_score": 4,
-            "risk_level": "Medium",
+            "risk_score": 8,
+            "risk_level": "High",
             "reasons": [
                 "Destination IP 1.1.1.1 was not seen in the baseline.",
-                "Protocol ICMP was not seen in the baseline."
+                "Protocol ICMP was not seen in the baseline.",
+                "Total size of 6000000 bytes exceeds the threshold of 1,000,000 bytes.",
+                "Packet count of 3 exceeds the threshold of 1000 packets."
             ]
         }
     ]
