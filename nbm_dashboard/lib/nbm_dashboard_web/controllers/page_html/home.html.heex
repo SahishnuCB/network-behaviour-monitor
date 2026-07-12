@@ -1,4 +1,5 @@
 <div style="font-family: Arial, sans-serif; padding: 24px; background: #111; color: #eee; min-height: 100vh;">
+
   <h1>Network Behaviour Monitor</h1>
 
   <p style="color: #aaa;">
@@ -16,7 +17,30 @@
     </p>
   </div>
 
-  <hr style="border-color: #333;">
+
+  <h2>Top Talkers</h2>
+
+  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
+    <%= for talker <- @analysis_result["top_talkers"] do %>
+      <div style="padding: 8px; border-bottom: 1px solid #333;">
+        <b>Destination IP:</b> <%= talker["dst_ip"] %> |
+        <b>Total Size:</b> <%= talker["total_size"] %> bytes
+      </div>
+    <% end %>
+  </div>
+
+
+  <h2>Protocol Distribution</h2>
+
+  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
+    <%= for {protocol, count} <- @analysis_result["protocol_distribution"] do %>
+      <div style="padding: 8px; border-bottom: 1px solid #333;">
+        <b>Protocol:</b> <%= protocol %> |
+        <b>Count:</b> <%= count %>
+      </div>
+    <% end %>
+  </div>
+
 
   <h2>Baseline Profile</h2>
 
@@ -27,6 +51,7 @@
     <p><b>Known Protocols:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_protocols"], ", ") %></p>
     <p><b>Known Services:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_services"], ", ") %></p>
   </div>
+
 
   <h2>Baseline Traffic Flows</h2>
 
@@ -72,6 +97,7 @@
       <% end %>
     </tbody>
   </table>
+
 
   <h2>Network Graph View</h2>
 
@@ -120,6 +146,7 @@
     <% end %>
   </div>
 
+
   <h2> Activity Log</h2>
 
   <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
@@ -150,6 +177,7 @@
       </div>
     <% end %>
   </div>
+
 
   <h2>Test Traffic Flows</h2>
 
@@ -195,6 +223,7 @@
       <% end %>
     </tbody>
   </table>
+
 
   <h2>Alerts</h2>
 

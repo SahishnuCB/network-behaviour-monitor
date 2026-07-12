@@ -1,5 +1,5 @@
 {
-    "generated_at": "12-07-2026 19:01:27",
+    "generated_at": "12-07-2026 19:37:15",
     "baseline_flows": [
         {
             "src_ip": "192.168.1.10",
@@ -27,20 +27,20 @@
             "192.168.1.10"
         ],
         "known_dst_ips": [
-            "8.8.8.8",
-            "142.250.195.14"
+            "142.250.195.14",
+            "8.8.8.8"
         ],
         "known_dst_ports": [
             443,
             53
         ],
         "known_protocols": [
-            "TCP",
-            "UDP"
+            "UDP",
+            "TCP"
         ],
         "known_services": [
-            "DNS",
-            "HTTPS"
+            "HTTPS",
+            "DNS"
         ]
     },
     "test_flows": [
@@ -81,8 +81,8 @@
             "src_port": 0,
             "dst_port": 0,
             "service": "Unknown",
-            "packet_count": 3,
-            "total_size": 6000000
+            "packet_count": 1,
+            "total_size": 2000000
         }
     ],
     "alerts": [
@@ -134,17 +134,39 @@
                 "src_port": 0,
                 "dst_port": 0,
                 "service": "Unknown",
-                "packet_count": 3,
-                "total_size": 6000000
+                "packet_count": 1,
+                "total_size": 2000000
             },
-            "risk_score": 8,
+            "risk_score": 6,
             "risk_level": "High",
             "reasons": [
                 "Destination IP 1.1.1.1 was not seen in the baseline.",
                 "Protocol ICMP was not seen in the baseline.",
-                "Total size of 6000000 bytes exceeds the threshold of 1,000,000 bytes.",
-                "Packet count of 3 exceeds the threshold of 1000 packets."
+                "Total size of 2000000 bytes exceeds the threshold of 1,000,000 bytes."
             ]
         }
-    ]
+    ],
+    "top_talkers": [
+        {
+            "dst_ip": "1.1.1.1",
+            "total_size": 2000000
+        },
+        {
+            "dst_ip": "142.250.195.14",
+            "total_size": 1000
+        },
+        {
+            "dst_ip": "45.33.32.156",
+            "total_size": 700
+        },
+        {
+            "dst_ip": "129.6.15.28",
+            "total_size": 90
+        }
+    ],
+    "protocol_distribution": {
+        "TCP": 2,
+        "UDP": 1,
+        "ICMP": 1
+    }
 }

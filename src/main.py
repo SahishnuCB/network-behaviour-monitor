@@ -198,7 +198,41 @@ def print_alerts(alerts):
         print("-" * 80)
 
 
-def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts):
+def get_top_talkers(flows):
+    destination_totals = {}
+
+    for flow in flows:
+        dst_ip = flow["dst_ip"]
+
+        if dst_ip not in destination_totals:
+            destination_totals[dst_ip] = 0
+
+        destination_totals[dst_ip] += flow["total_size"]
+
+    top_talkers = sorted(
+        destination_totals.items(), key=lambda item: item[1], reverse=True
+    )
+
+    return [
+        {"dst_ip": dst_ip, "total_size": total_size} for dst_ip, total_size in top_talkers
+    ]
+
+
+def get_protocol_distribution(flows):
+    protocol_counts = {}
+
+    for flow in flows:
+        protocol = flow["protocol"]
+
+        if protocol not in protocol_counts:
+            protocol_counts[protocol] = 0
+
+        protocol_counts[protocol] += 1
+
+    return protocol_counts
+
+
+def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts, top_talkers, protocol_distribution):
     result = {\
         "generated_at": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
         "baseline_flows": baseline_flows,
@@ -211,6 +245,8 @@ def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts
         },
         "test_flows": test_flows,
         "alerts": alerts,
+        "top_talkers": top_talkers,
+        "protocol_distribution": protocol_distribution
     }
 
     with open(file_path, "w") as file:
@@ -239,14 +275,14 @@ def main():
     test_packets = load_packets("data/test_packets.json")
     test_flows = group_packets_into_flows(test_packets)
     alerts = detect_anomalies(test_flows, baseline)
+    top_talkers = get_top_talkers(test_flows)
+    protocol_distribution = get_protocol_distribution(test_flows)
 
     print_flows(baseline_flows, "Baseline Traffic Flows")
     print_baseline(baseline)
     print_flows(test_flows, "Test Traffic Flows")
     print_alerts(alerts)
-    save_analysis_result(
-        "data/analysis_result.json", baseline_flows, baseline, test_flows, alerts
-    )
+    save_analysis_result("data/analysis_result.json", baseline_flows, baseline, test_flows, alerts, top_talkers, protocol_distribution)
 
 
 if __name__ == "__main__":
