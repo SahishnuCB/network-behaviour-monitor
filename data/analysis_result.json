@@ -1,118 +1,798 @@
 {
-    "generated_at": "12-07-2026 19:37:15",
+    "generated_at": "14-07-2026 17:43:38",
     "baseline_flows": [
         {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "142.250.195.14",
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 60190,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 5,
+            "total_size": 376
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.42.65.85",
             "protocol": "TCP",
-            "src_port": 51544,
+            "src_port": 22975,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 10,
+            "total_size": 3695
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.184.175.15",
+            "protocol": "TCP",
+            "src_port": 11285,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 16,
+            "total_size": 17736
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "40.126.18.32",
+            "protocol": "TCP",
+            "src_port": 22974,
             "dst_port": 443,
             "service": "HTTPS",
             "packet_count": 2,
-            "total_size": 2100
+            "total_size": 132
         },
         {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "8.8.8.8",
+            "src_ip": "172.16.21.253",
+            "dst_ip": "140.82.114.21",
+            "protocol": "TCP",
+            "src_port": 50449,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 108
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "104.16.24.84",
+            "protocol": "TCP",
+            "src_port": 22976,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 6,
+            "total_size": 3600
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
             "protocol": "UDP",
-            "src_port": 53021,
+            "src_port": 60121,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 10,
+            "total_size": 819
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "74.125.24.119",
+            "protocol": "UDP",
+            "src_port": 49855,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 29,
+            "total_size": 7418
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "57.144.55.32",
+            "protocol": "TCP",
+            "src_port": 16733,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 92,
+            "total_size": 18478
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "142.251.154.4",
+            "protocol": "TCP",
+            "src_port": 22977,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 14,
+            "total_size": 13660
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "49.44.76.142",
+            "protocol": "UDP",
+            "src_port": 50914,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 1070,
+            "total_size": 154275
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 50686,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 3,
+            "total_size": 284
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.1.91",
+            "protocol": "TCP",
+            "src_port": 22978,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 10,
+            "total_size": 3695
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.65.91",
+            "protocol": "TCP",
+            "src_port": 22979,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 11,
+            "total_size": 4557
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "35.186.224.35",
+            "protocol": "TCP",
+            "src_port": 30639,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 151
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "203.153.36.182",
+            "protocol": "TCP",
+            "src_port": 22980,
+            "dst_port": 80,
+            "service": "HTTP",
+            "packet_count": 5,
+            "total_size": 393
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "40.126.18.33",
+            "protocol": "TCP",
+            "src_port": 22981,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 132
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.37.198.118",
+            "protocol": "TCP",
+            "src_port": 22982,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 9,
+            "total_size": 1766
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "140.82.112.21",
+            "protocol": "TCP",
+            "src_port": 22983,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 11,
+            "total_size": 7761
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "224.0.0.251",
+            "protocol": "UDP",
+            "src_port": 5353,
+            "dst_port": 5353,
+            "service": "Unknown",
+            "packet_count": 1,
+            "total_size": 87
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 61336,
             "dst_port": 53,
             "service": "DNS",
             "packet_count": 1,
-            "total_size": 80
+            "total_size": 85
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 64338,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 85
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "35.186.224.22",
+            "protocol": "UDP",
+            "src_port": 61464,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 15,
+            "total_size": 7934
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 63426,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 83
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 61996,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 83
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "35.186.224.24",
+            "protocol": "UDP",
+            "src_port": 59904,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 13,
+            "total_size": 9257
         }
     ],
     "baseline_profile": {
         "known_src_ips": [
-            "192.168.1.10"
+            "172.16.21.253"
         ],
         "known_dst_ips": [
-            "142.250.195.14",
-            "8.8.8.8"
+            "142.251.154.4",
+            "140.82.112.21",
+            "151.101.1.91",
+            "203.153.36.182",
+            "140.82.114.21",
+            "74.125.24.119",
+            "20.184.175.15",
+            "40.126.18.33",
+            "104.16.24.84",
+            "35.186.224.35",
+            "57.144.55.32",
+            "35.186.224.24",
+            "35.186.224.22",
+            "224.0.0.251",
+            "40.126.18.32",
+            "151.101.65.91",
+            "49.44.76.142",
+            "20.42.65.85",
+            "172.16.16.1",
+            "20.37.198.118"
         ],
         "known_dst_ports": [
+            80,
+            5353,
             443,
             53
         ],
         "known_protocols": [
-            "UDP",
-            "TCP"
+            "TCP",
+            "UDP"
         ],
         "known_services": [
             "HTTPS",
-            "DNS"
+            "Unknown",
+            "DNS",
+            "HTTP"
         ]
     },
     "test_flows": [
         {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "142.250.195.14",
+            "src_ip": "172.16.21.253",
+            "dst_ip": "4.150.223.115",
             "protocol": "TCP",
-            "src_port": 51544,
+            "src_port": 39984,
             "dst_port": 443,
             "service": "HTTPS",
-            "packet_count": 1,
-            "total_size": 1000
+            "packet_count": 8,
+            "total_size": 3058
         },
         {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "45.33.32.156",
-            "protocol": "TCP",
-            "src_port": 52000,
-            "dst_port": 4444,
-            "service": "Unknown",
-            "packet_count": 1,
-            "total_size": 700
-        },
-        {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "129.6.15.28",
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
             "protocol": "UDP",
-            "src_port": 12345,
+            "src_port": 53865,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 92
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 49402,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 1,
+            "total_size": 92
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.184.175.6",
+            "protocol": "TCP",
+            "src_port": 16715,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 3,
+            "total_size": 3246
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "49.44.76.144",
+            "protocol": "UDP",
+            "src_port": 51708,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 514,
+            "total_size": 51808
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "49.44.76.144",
+            "protocol": "TCP",
+            "src_port": 12060,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 4,
+            "total_size": 241
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "34.107.243.93",
+            "protocol": "TCP",
+            "src_port": 19304,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.1.91",
+            "protocol": "TCP",
+            "src_port": 19305,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.129.91",
+            "protocol": "TCP",
+            "src_port": 19313,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 154
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.129.91",
+            "protocol": "TCP",
+            "src_port": 19306,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.1.91",
+            "protocol": "TCP",
+            "src_port": 19312,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "151.101.1.91",
+            "protocol": "TCP",
+            "src_port": 19300,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.213.196.212",
+            "protocol": "TCP",
+            "src_port": 12072,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 108
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "172.16.16.1",
+            "protocol": "UDP",
+            "src_port": 60680,
+            "dst_port": 53,
+            "service": "DNS",
+            "packet_count": 3,
+            "total_size": 236
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "35.165.53.162",
+            "protocol": "TCP",
+            "src_port": 1560,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 108
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.190.145.142",
+            "protocol": "TCP",
+            "src_port": 39985,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 4,
+            "total_size": 264
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "49.44.211.207",
+            "protocol": "TCP",
+            "src_port": 12062,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 4,
+            "total_size": 241
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "162.159.200.1",
+            "protocol": "UDP",
+            "src_port": 49403,
             "dst_port": 123,
             "service": "NTP",
             "packet_count": 1,
             "total_size": 90
         },
         {
-            "src_ip": "192.168.1.10",
-            "dst_ip": "1.1.1.1",
-            "protocol": "ICMP",
-            "src_port": 0,
-            "dst_port": 0,
-            "service": "Unknown",
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.199.39.224",
+            "protocol": "TCP",
+            "src_port": 12049,
+            "dst_port": 443,
+            "service": "HTTPS",
             "packet_count": 1,
-            "total_size": 2000000
+            "total_size": 55
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "74.125.24.119",
+            "protocol": "TCP",
+            "src_port": 12050,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "140.82.112.21",
+            "protocol": "TCP",
+            "src_port": 57318,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 1,
+            "total_size": 55
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "142.250.4.132",
+            "protocol": "TCP",
+            "src_port": 12053,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "74.125.24.119",
+            "protocol": "TCP",
+            "src_port": 12061,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 147
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "140.82.112.21",
+            "protocol": "TCP",
+            "src_port": 39948,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 1,
+            "total_size": 55
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.150.179.227",
+            "protocol": "TCP",
+            "src_port": 30939,
+            "dst_port": 8883,
+            "service": "Unknown",
+            "packet_count": 2,
+            "total_size": 139
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "142.250.77.110",
+            "protocol": "TCP",
+            "src_port": 39986,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 12,
+            "total_size": 7464
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "20.213.196.212",
+            "protocol": "TCP",
+            "src_port": 47053,
+            "dst_port": 443,
+            "service": "HTTPS",
+            "packet_count": 2,
+            "total_size": 108
+        },
+        {
+            "src_ip": "172.16.21.253",
+            "dst_ip": "203.153.36.182",
+            "protocol": "TCP",
+            "src_port": 39987,
+            "dst_port": 80,
+            "service": "HTTP",
+            "packet_count": 5,
+            "total_size": 393
         }
     ],
     "alerts": [
         {
             "type": "Suspicious Flow",
             "flow": {
-                "src_ip": "192.168.1.10",
-                "dst_ip": "45.33.32.156",
+                "src_ip": "172.16.21.253",
+                "dst_ip": "4.150.223.115",
                 "protocol": "TCP",
-                "src_port": 52000,
-                "dst_port": 4444,
-                "service": "Unknown",
-                "packet_count": 1,
-                "total_size": 700
+                "src_port": 39984,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 8,
+                "total_size": 3058
             },
-            "risk_score": 5,
-            "risk_level": "High",
+            "risk_score": 2,
+            "risk_level": "Low",
             "reasons": [
-                "Destination IP 45.33.32.156 was not seen in the baseline.",
-                "Destination port 4444 was not seen in the baseline and is not mapped to a common service.",
-                "Service for destination port 4444 is unknown."
+                "Destination IP 4.150.223.115 was not seen in the baseline."
             ]
         },
         {
             "type": "Suspicious Flow",
             "flow": {
-                "src_ip": "192.168.1.10",
-                "dst_ip": "129.6.15.28",
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.184.175.6",
+                "protocol": "TCP",
+                "src_port": 16715,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 3,
+                "total_size": 3246
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 20.184.175.6 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "49.44.76.144",
                 "protocol": "UDP",
-                "src_port": 12345,
+                "src_port": 51708,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 514,
+                "total_size": 51808
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 49.44.76.144 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "49.44.76.144",
+                "protocol": "TCP",
+                "src_port": 12060,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 4,
+                "total_size": 241
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 49.44.76.144 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "34.107.243.93",
+                "protocol": "TCP",
+                "src_port": 19304,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 147
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 34.107.243.93 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "151.101.129.91",
+                "protocol": "TCP",
+                "src_port": 19313,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 154
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 151.101.129.91 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "151.101.129.91",
+                "protocol": "TCP",
+                "src_port": 19306,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 147
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 151.101.129.91 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.213.196.212",
+                "protocol": "TCP",
+                "src_port": 12072,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 108
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 20.213.196.212 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "35.165.53.162",
+                "protocol": "TCP",
+                "src_port": 1560,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 108
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 35.165.53.162 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.190.145.142",
+                "protocol": "TCP",
+                "src_port": 39985,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 4,
+                "total_size": 264
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 20.190.145.142 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "49.44.211.207",
+                "protocol": "TCP",
+                "src_port": 12062,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 4,
+                "total_size": 241
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 49.44.211.207 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "162.159.200.1",
+                "protocol": "UDP",
+                "src_port": 49403,
                 "dst_port": 123,
                 "service": "NTP",
                 "packet_count": 1,
@@ -121,52 +801,183 @@
             "risk_score": 3,
             "risk_level": "Medium",
             "reasons": [
-                "Destination IP 129.6.15.28 was not seen in the baseline.",
+                "Destination IP 162.159.200.1 was not seen in the baseline.",
                 "Destination port 123 was not seen in the baseline, but it is commonly used for NTP."
             ]
         },
         {
             "type": "Suspicious Flow",
             "flow": {
-                "src_ip": "192.168.1.10",
-                "dst_ip": "1.1.1.1",
-                "protocol": "ICMP",
-                "src_port": 0,
-                "dst_port": 0,
-                "service": "Unknown",
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.199.39.224",
+                "protocol": "TCP",
+                "src_port": 12049,
+                "dst_port": 443,
+                "service": "HTTPS",
                 "packet_count": 1,
-                "total_size": 2000000
+                "total_size": 55
             },
-            "risk_score": 6,
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 20.199.39.224 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "142.250.4.132",
+                "protocol": "TCP",
+                "src_port": 12053,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 147
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 142.250.4.132 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.150.179.227",
+                "protocol": "TCP",
+                "src_port": 30939,
+                "dst_port": 8883,
+                "service": "Unknown",
+                "packet_count": 2,
+                "total_size": 139
+            },
+            "risk_score": 5,
             "risk_level": "High",
             "reasons": [
-                "Destination IP 1.1.1.1 was not seen in the baseline.",
-                "Protocol ICMP was not seen in the baseline.",
-                "Total size of 2000000 bytes exceeds the threshold of 1,000,000 bytes."
+                "Destination IP 20.150.179.227 was not seen in the baseline.",
+                "Destination port 8883 was not seen in the baseline and is not mapped to a common service.",
+                "Service for destination port 8883 is unknown."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "142.250.77.110",
+                "protocol": "TCP",
+                "src_port": 39986,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 12,
+                "total_size": 7464
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 142.250.77.110 was not seen in the baseline."
+            ]
+        },
+        {
+            "type": "Suspicious Flow",
+            "flow": {
+                "src_ip": "172.16.21.253",
+                "dst_ip": "20.213.196.212",
+                "protocol": "TCP",
+                "src_port": 47053,
+                "dst_port": 443,
+                "service": "HTTPS",
+                "packet_count": 2,
+                "total_size": 108
+            },
+            "risk_score": 2,
+            "risk_level": "Low",
+            "reasons": [
+                "Destination IP 20.213.196.212 was not seen in the baseline."
             ]
         }
     ],
     "top_talkers": [
         {
-            "dst_ip": "1.1.1.1",
-            "total_size": 2000000
+            "dst_ip": "49.44.76.144",
+            "total_size": 52049
         },
         {
-            "dst_ip": "142.250.195.14",
-            "total_size": 1000
+            "dst_ip": "142.250.77.110",
+            "total_size": 7464
         },
         {
-            "dst_ip": "45.33.32.156",
-            "total_size": 700
+            "dst_ip": "20.184.175.6",
+            "total_size": 3246
         },
         {
-            "dst_ip": "129.6.15.28",
+            "dst_ip": "4.150.223.115",
+            "total_size": 3058
+        },
+        {
+            "dst_ip": "151.101.1.91",
+            "total_size": 441
+        },
+        {
+            "dst_ip": "172.16.16.1",
+            "total_size": 420
+        },
+        {
+            "dst_ip": "203.153.36.182",
+            "total_size": 393
+        },
+        {
+            "dst_ip": "151.101.129.91",
+            "total_size": 301
+        },
+        {
+            "dst_ip": "74.125.24.119",
+            "total_size": 294
+        },
+        {
+            "dst_ip": "20.190.145.142",
+            "total_size": 264
+        },
+        {
+            "dst_ip": "49.44.211.207",
+            "total_size": 241
+        },
+        {
+            "dst_ip": "20.213.196.212",
+            "total_size": 216
+        },
+        {
+            "dst_ip": "34.107.243.93",
+            "total_size": 147
+        },
+        {
+            "dst_ip": "142.250.4.132",
+            "total_size": 147
+        },
+        {
+            "dst_ip": "20.150.179.227",
+            "total_size": 139
+        },
+        {
+            "dst_ip": "140.82.112.21",
+            "total_size": 110
+        },
+        {
+            "dst_ip": "35.165.53.162",
+            "total_size": 108
+        },
+        {
+            "dst_ip": "162.159.200.1",
             "total_size": 90
+        },
+        {
+            "dst_ip": "20.199.39.224",
+            "total_size": 55
         }
     ],
     "protocol_distribution": {
-        "TCP": 2,
-        "UDP": 1,
-        "ICMP": 1
+        "TCP": 23,
+        "UDP": 5
     }
 }

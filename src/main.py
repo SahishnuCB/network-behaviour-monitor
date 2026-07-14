@@ -1,5 +1,16 @@
 import json
 from datetime import datetime
+import socket
+
+
+def get_local_ip():
+    connection = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    try:
+        connection.connect(("8.8.8.8", 80))
+        return connection.getsockname()[0]
+    finally:
+        connection.close()
 
 def load_packets(file_path):
     with open(file_path, "r") as file:
@@ -268,12 +279,31 @@ def print_baseline(baseline):
 
 
 def main():
-    baseline_packets = load_packets("data/sample_packets.json")
-    baseline_flows = group_packets_into_flows(baseline_packets)
+    
+    local_ip = get_local_ip()
+    print(f"Local IP Address: {local_ip}")
+
+
+    baseline_packets = load_packets("data/baseline_packets.json")
+    all_baseline_flows = group_packets_into_flows(baseline_packets)
+
+    baseline_flows = [
+        flow
+        for flow in all_baseline_flows
+        if flow["src_ip"] == local_ip
+    ]
+
     baseline = build_baseline(baseline_flows)
 
-    test_packets = load_packets("data/test_packets.json")
-    test_flows = group_packets_into_flows(test_packets)
+    test_packets = load_packets("data/captured_packets.json")
+
+    all_test_flows = group_packets_into_flows(test_packets)
+    test_flows = [
+        flow
+        for flow in all_test_flows
+        if flow["src_ip"] == local_ip
+    ]
+
     alerts = detect_anomalies(test_flows, baseline)
     top_talkers = get_top_talkers(test_flows)
     protocol_distribution = get_protocol_distribution(test_flows)
