@@ -1,6 +1,14 @@
 import json
 from datetime import datetime
 import socket
+import ipaddress
+
+BASELINE_FILE = "data/baseline_packets.json"
+TEST_FILE = "data/captured_packets.json"
+OUTPUT_FILE = "data/analysis_result.json"
+
+LARGE_TRANSFER_THRESHOLD = 1_000_000
+HIGH_PACKET_COUNT_THRESHOLD = 1000
 
 
 def get_local_ip():
@@ -12,10 +20,31 @@ def get_local_ip():
     finally:
         connection.close()
 
+
 def load_packets(file_path):
-    with open(file_path, "r") as file:
-        packets = json.load(file)
-    return packets
+    try:
+        with open(file_path, "r") as file:
+            packets = json.load(file)
+
+        if not isinstance(packets, list):
+            raise ValueError("Packet file must contain a JSON list.")
+
+        if not packets:
+            raise ValueError(f"{file_path} contains no packets.")
+
+        return packets
+
+    except FileNotFoundError:
+        print(f"Error: Could not find {file_path}.")
+        return None
+
+    except json.JSONDecodeError:
+        print(f"Error: {file_path} contains invalid JSON.")
+        return None
+
+    except ValueError as error:
+        print(f"Error: {error}")
+        return None
 
 
 def create_flow_key(packet):
@@ -39,13 +68,22 @@ def get_service_name(port):
         80: "HTTP",
         110: "POP3",
         123: "NTP",
+        137: "NetBIOS Name Service",
+        138: "NetBIOS Datagram Service",
         143: "IMAP",
         443: "HTTPS",
         990: "FTPS",
         993: "IMAPS",
         995: "POP3S",
+        1900: "SSDP",
         3306: "MySQL",
+        5353: "mDNS",
+        5355: "LLMNR",
         5432: "PostgreSQL",
+        8883: "MQTT over TLS",
+        9200: "Elasticsearch",
+        27015: "Game Server",
+        27017: "MongoDB",
     }
 
     return common_ports.get(port, "Unknown")
@@ -54,7 +92,24 @@ def get_service_name(port):
 def group_packets_into_flows(packets):
     flows = {}
 
+    required_fields = {
+        "src_ip",
+        "dst_ip",
+        "protocol",
+        "src_port",
+        "dst_port",
+        "size",
+    }
+
     for packet in packets:
+        if not isinstance(packet, dict):
+            print("Warning: Skipping invalid packet entry.")
+            continue
+
+        if not required_fields.issubset(packet):
+            print(f"Warning: Skipping packet with missing fields: {packet}")
+            continue
+
         flow_key = create_flow_key(packet)
 
         if flow_key not in flows:
@@ -94,18 +149,37 @@ def build_baseline(flows):
     return baseline
 
 
+def is_normal_local_service(flow):
+    normal_local_services = {
+        "DHCP Server",
+        "DHCP Client",
+        "NetBIOS Name Service",
+        "NetBIOS Datagram Service",
+        "SSDP",
+        "mDNS",
+        "LLMNR",
+    }
+
+    return flow["service"] in normal_local_services
+
+
+def is_private_ip(ip_address):
+    try:
+        return ipaddress.ip_address(ip_address).is_private
+    except ValueError:
+        return False
+
+
 def detect_anomalies(flows, baseline):
     alerts = []
 
     for flow in flows:
         reasons = []
         risk_score = 0
+        new_destination_ip = flow["dst_ip"] not in baseline["known_dst_ips"]
 
-        if flow["dst_ip"] not in baseline["known_dst_ips"]:
-            reasons.append(
-                f'Destination IP {flow["dst_ip"]} was not seen in the baseline.'
-            )
-            risk_score += 2
+        if is_normal_local_service(flow):
+            continue
 
         if flow["protocol"] not in baseline["known_protocols"]:
             reasons.append(f'Protocol {flow["protocol"]} was not seen in the baseline.')
@@ -132,17 +206,31 @@ def detect_anomalies(flows, baseline):
                 )
                 risk_score += 1
 
-        if flow["total_size"] > 1_000_000:
+        if flow["total_size"] > LARGE_TRANSFER_THRESHOLD:
             reasons.append(
-                f'Total size of {flow["total_size"]} bytes exceeds the threshold of 1,000,000 bytes.'
+                f'Total size of {flow["total_size"]} bytes exceeds the threshold of {LARGE_TRANSFER_THRESHOLD} bytes.'
             )
             risk_score += 2
 
-        if flow["packet_count"] > 1000:
+        if flow["packet_count"] > HIGH_PACKET_COUNT_THRESHOLD:
             reasons.append(
-                f'Packet count of {flow["packet_count"]} exceeds the threshold of 1000 packets.'
+                f'Packet count of {flow["packet_count"]} exceeds the threshold of {HIGH_PACKET_COUNT_THRESHOLD} packets.'
             )
             risk_score += 2
+
+        if new_destination_ip and risk_score > 0:
+            if is_private_ip(flow["dst_ip"]):
+                reasons.insert(
+                    0,
+                    f'Destination IP {flow["dst_ip"]} is a new private IP address not seen in the baseline.'
+                )
+            else:
+                reasons.insert(
+                    0,
+                    f'Destination IP {flow["dst_ip"]} is a new public IP address not seen in the baseline.'
+                )
+
+            risk_score += 1
 
         if reasons:
             alerts.append(
@@ -244,7 +332,7 @@ def get_protocol_distribution(flows):
 
 
 def save_analysis_result(file_path, baseline_flows, baseline, test_flows, alerts, top_talkers, protocol_distribution):
-    result = {\
+    result = {
         "generated_at": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
         "baseline_flows": baseline_flows,
         "baseline_profile": {
@@ -278,31 +366,55 @@ def print_baseline(baseline):
     print(f'Known Services: {format_set(baseline["known_services"])}')
 
 
+def print_summary(baseline_flows, test_flows, alerts):
+    low = 0
+    medium = 0
+    high = 0
+
+    for alert in alerts:
+        if alert["risk_level"] == "Low":
+            low += 1
+        elif alert["risk_level"] == "Medium":
+            medium += 1
+        elif alert["risk_level"] == "High":
+            high += 1
+
+    print("\nAnalysis Summary")
+    print("-" * 80)
+    print(f"Baseline Flows : {len(baseline_flows)}")
+    print(f"Test Flows     : {len(test_flows)}")
+    print(f"Alerts         : {len(alerts)}")
+    print(f"Low Risk       : {low}")
+    print(f"Medium Risk    : {medium}")
+    print(f"High Risk      : {high}")
+
+
 def main():
-    
     local_ip = get_local_ip()
     print(f"Local IP Address: {local_ip}")
 
+    baseline_packets = load_packets(BASELINE_FILE)
 
-    baseline_packets = load_packets("data/baseline_packets.json")
+    if baseline_packets is None:
+        return
+
     all_baseline_flows = group_packets_into_flows(baseline_packets)
 
-    baseline_flows = [
-        flow
-        for flow in all_baseline_flows
-        if flow["src_ip"] == local_ip
-    ]
+    baseline_flows = [flow for flow in all_baseline_flows if flow["src_ip"] == local_ip]
+
+    if not baseline_flows:
+        print("Error: No baseline flows found for the local IP address.")
+        return
 
     baseline = build_baseline(baseline_flows)
 
-    test_packets = load_packets("data/captured_packets.json")
+    test_packets = load_packets(TEST_FILE)
+    if test_packets is None:
+        return
 
     all_test_flows = group_packets_into_flows(test_packets)
-    test_flows = [
-        flow
-        for flow in all_test_flows
-        if flow["src_ip"] == local_ip
-    ]
+
+    test_flows = [flow for flow in all_test_flows if flow["src_ip"] == local_ip]
 
     alerts = detect_anomalies(test_flows, baseline)
     top_talkers = get_top_talkers(test_flows)
@@ -312,7 +424,17 @@ def main():
     print_baseline(baseline)
     print_flows(test_flows, "Test Traffic Flows")
     print_alerts(alerts)
-    save_analysis_result("data/analysis_result.json", baseline_flows, baseline, test_flows, alerts, top_talkers, protocol_distribution)
+    print_summary(baseline_flows, test_flows, alerts)
+
+    save_analysis_result(
+        OUTPUT_FILE,
+        baseline_flows,
+        baseline,
+        test_flows,
+        alerts,
+        top_talkers,
+        protocol_distribution,
+    )
 
 
 if __name__ == "__main__":
