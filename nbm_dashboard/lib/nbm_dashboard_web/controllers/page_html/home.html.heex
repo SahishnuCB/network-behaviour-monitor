@@ -1,3 +1,5 @@
+<script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+
 <div style="font-family: Arial, sans-serif; padding: 24px; background: #111; color: #eee; min-height: 100vh;">
 
   <h1>Network Behaviour Monitor</h1>
@@ -21,12 +23,14 @@
   <h2>Top Talkers</h2>
 
   <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <%= for talker <- @analysis_result["top_talkers"] do %>
-      <div style="padding: 8px; border-bottom: 1px solid #333;">
-        <b>Destination IP:</b> <%= talker["dst_ip"] %> |
-        <b>Total Size:</b> <%= talker["total_size"] %> bytes
-      </div>
-    <% end %>
+    <p style="color: #aaa; margin--top: 0;">
+        Interactive view of observed source-to--destination connections.
+    </p>
+
+    <div 
+      id="network-graph"
+      style="width: 100%; height: 550px; background: #111; border: 1px solid #444;"
+    ></div>
   </div>
 
 
@@ -265,3 +269,176 @@
     Data loaded from analysis_result.json. This page is only for local project demonstration.
   </p>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const flows = <%= Jason.encode!(@analysis_result["test_flows"]) |> Phoenix.HTML.raw() %>;
+    const alerts = <%= Jason.encode!(@analysis_result["alerts"]) |> Phoenix.HTML.raw() %>;
+
+    const elements = [];
+    const nodeIds = new Set();
+
+    const alertDestinations = new Set(
+      alerts.map((alert) => alert.flow.dst_ip)
+    );
+
+    for (const flow of flows) {
+      const sourceId = flow.src_ip;
+      const destinationId = flow.dst_ip;
+
+      if (!nodeIds.has(sourceId)) {
+        elements.push({
+          data: {
+            id: sourceId,
+            label: sourceId
+          }
+        });
+
+        nodeIds.add(sourceId);
+      }
+
+      if (!nodeIds.has(destinationId)) {
+        elements.push({
+          data: {
+            id: destinationId,
+            label: destinationId,
+            alert: alertDestinations.has(destinationId) ? "yes" : "no"
+          }
+        });
+
+        nodeIds.add(destinationId);
+      }
+
+      const matchingAlert = alerts.find((alert) => {
+        const alertFlow = alert.flow;
+
+        return (
+          alertFlow.src_ip === flow.src_ip &&
+          alertFlow.dst_ip === flow.dst_ip &&
+          alertFlow.dst_port === flow.dst_port
+        );
+      });
+
+      elements.push({
+        data: {
+          id: `${flow.src_ip}-${flow.dst_ip}-${flow.src_port}-${flow.dst_port}`,
+          source: sourceId,
+          target: destinationId,
+          label: `${flow.protocol} / ${flow.service}`,
+          riskLevel: matchingAlert ? matchingAlert.risk_level : "Normal"
+        }
+      });
+    }
+
+    cytoscape({
+      container: document.getElementById("network-graph"),
+
+      elements: elements,
+
+      style: [
+          {
+            selector: "node",
+            style: {
+              "background-color": "#3b82f6",
+              "label": "data(label)",
+              "color": "#ffffff",
+              "font-size": "11px",
+              "text-valign": "bottom",
+              "text-margin-y": "8px",
+              "width": 35,
+              "height": 35,
+              "border-width": 2,
+              "border-color": "#222"
+            }
+          },
+
+          {
+            selector: 'node[id = "<%= get_in(@analysis_result, ["baseline_profile", "known_src_ips"]) |> List.first() %>"]',
+            style: {
+              "background-color": "#22c55e",
+              "width": 60,
+              "height": 60,
+              "font-size": "14px",
+              "font-weight": "bold",
+              "border-width": 4,
+              "border-color": "#ffffff"
+            }
+          },
+
+          {
+            selector: 'node[alert = "yes"]',
+            style: {
+              "background-color": "#ef4444",
+              "border-width": 3,
+              "border-color": "#ffffff"
+            }
+          },
+
+          {
+            selector: "edge",
+            style: {
+              "width": 2,
+              "line-color": "#666",
+              "target-arrow-color": "#666",
+              "target-arrow-shape": "triangle",
+              "curve-style": "bezier",
+
+              "label": "data(label)",
+              "font-size": "9px",
+              "color": "#aaa",
+
+              "text-background-color": "#111",
+              "text-background-opacity": 0.8,
+              "text-background-padding": "3px"
+            }
+          },
+
+          {
+            selector: 'edge[riskLevel = "Low"]',
+            style: {
+              "line-color": "#facc15",
+              "target-arrow-color": "#facc15"
+            }
+          },
+
+          {
+            selector: 'edge[riskLevel = "Medium"]',
+            style: {
+              "line-color": "#fb923c",
+              "target-arrow-color": "#fb923c"
+            }
+          },
+
+          {
+            selector: 'edge[riskLevel = "High"]',
+            style: {
+              "line-color": "#ef4444",
+              "target-arrow-color": "#ef4444"
+            }
+          }
+        ],
+
+      layout: {
+        name: "concentric",
+        animate: false,
+        padding: 40,
+        minNodeSpacing: 60,
+        concentric: (node) => {
+          const localIp =
+            "<%= get_in(@analysis_result, ["baseline_profile", "known_src_ips"]) |> List.first() %>";
+
+          if (node.id() === localIp) {
+            return 2;
+          }
+
+          if (node.data("alert") === "yes") {
+            return 1;
+          }
+
+          return 0;
+        },
+        levelWidth: () => 1
+      }
+    });
+  });
+</script>
