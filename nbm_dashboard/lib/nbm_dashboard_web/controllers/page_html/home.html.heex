@@ -1,313 +1,1199 @@
 <script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
 
-<div style="font-family: Arial, sans-serif; padding: 24px; background: #111; color: #eee; min-height: 100vh;">
+<%
+  baseline_flows = @analysis_result["baseline_flows"] || []
+  test_flows = @analysis_result["test_flows"] || []
+  alerts = @analysis_result["alerts"] || []
+  top_talkers = @analysis_result["top_talkers"] || []
+  protocol_distribution = @analysis_result["protocol_distribution"] || %{}
+  baseline_profile = @analysis_result["baseline_profile"] || %{}
 
-  <h1>Network Behaviour Monitor</h1>
+  known_src_ips = baseline_profile["known_src_ips"] || []
+  known_dst_ips = baseline_profile["known_dst_ips"] || []
+  known_dst_ports = baseline_profile["known_dst_ports"] || []
+  known_protocols = baseline_profile["known_protocols"] || []
+  known_services = baseline_profile["known_services"] || []
 
-  <p style="color: #aaa;">
-    Temporary dashboard for showing baseline traffic, test flows, and generated alerts.
-  </p>
+  local_ip = List.first(known_src_ips) || "Local Device"
 
-  <div style="background: #1b1b1b; padding: 12px; border: 1px solid #333; margin: 16px 0 24px 0;">
-    <b>Summary:</b>
-    Generated At: <%= @analysis_result["generated_at"] %> |
-    Total Test Flows: <%= length(@analysis_result["test_flows"]) %> |
-    Total Alerts: <%= length(@analysis_result["alerts"]) %>
+  low_alerts = Enum.count(alerts, &(&1["risk_level"] == "Low"))
+  medium_alerts = Enum.count(alerts, &(&1["risk_level"] == "Medium"))
+  high_alerts = Enum.count(alerts, &(&1["risk_level"] == "High"))
+%>
 
-    <p style="color: #888; font-size: 14px;">
-      To refresh analysis data, run: <code> py .\src\main.py</code> from the project root.
-    </p>
-  </div>
+<style>
+  :root {
+    --background: #070b12;
+    --surface: #0d1420;
+    --surface-light: #111b2a;
+    --border: #1e2b3d;
+    --border-bright: #30445e;
+    --text: #e6edf7;
+    --muted: #8291a8;
+    --blue: #38bdf8;
+    --green: #34d399;
+    --yellow: #facc15;
+    --orange: #fb923c;
+    --red: #f87171;
+  }
 
+  * {
+    box-sizing: border-box;
+  }
 
-  <h2>Top Talkers</h2>
+  body {
+    margin: 0;
+    background: var(--background);
+  }
 
-  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <p style="color: #aaa; margin--top: 0;">
-        Interactive view of observed source-to--destination connections.
-    </p>
+  .nbm-page {
+    min-height: 100vh;
+    padding: 28px;
+    color: var(--text);
+    font-family:
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.09), transparent 30%),
+      radial-gradient(circle at 90% 20%, rgba(52, 211, 153, 0.06), transparent 25%),
+      #070b12;
+  }
 
-    <div 
-      id="network-graph"
-      style="width: 100%; height: 550px; background: #111; border: 1px solid #444;"
-    ></div>
-  </div>
+  .nbm-container {
+    width: min(1500px, 100%);
+    margin: 0 auto;
+  }
 
+  .nbm-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
 
-  <h2>Protocol Distribution</h2>
+  .nbm-title {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 46px);
+    letter-spacing: -1.5px;
+  }
 
-  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <%= for {protocol, count} <- @analysis_result["protocol_distribution"] do %>
-      <div style="padding: 8px; border-bottom: 1px solid #333;">
-        <b>Protocol:</b> <%= protocol %> |
-        <b>Count:</b> <%= count %>
-      </div>
-    <% end %>
-  </div>
+  .nbm-subtitle {
+    max-width: 720px;
+    margin: 8px 0 0;
+    color: var(--muted);
+    line-height: 1.6;
+  }
 
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.08);
+    color: #a7f3d0;
+    font-size: 13px;
+    font-weight: 700;
+  }
 
-  <h2>Baseline Profile</h2>
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.85);
+  }
 
-  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <p><b>Known Source IPs:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_src_ips"], ", ") %></p>
-    <p><b>Known Destination IPs:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_dst_ips"], ", ") %></p>
-    <p><b>Known Destination Ports:</b> <%= Enum.join(Enum.map(@analysis_result["baseline_profile"]["known_dst_ports"], &to_string/1), ", ") %></p>
-    <p><b>Known Protocols:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_protocols"], ", ") %></p>
-    <p><b>Known Services:</b> <%= Enum.join(@analysis_result["baseline_profile"]["known_services"], ", ") %></p>
-  </div>
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(13, 20, 32, 0.94);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+  }
 
+  .summary-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    padding: 15px 18px;
+    margin-bottom: 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
 
-  <h2>Baseline Traffic Flows</h2>
+  .summary-strip strong {
+    color: var(--text);
+  }
 
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <thead>
-      <tr style="background: #222;">
-        <th style="border: 1px solid #444; padding: 8px;">Source</th>
-        <th style="border: 1px solid #444; padding: 8px;">Destination</th>
-        <th style="border: 1px solid #444; padding: 8px;">Protocol</th>
-        <th style="border: 1px solid #444; padding: 8px;">Service</th>
-        <th style="border: 1px solid #444; padding: 8px;">Packets</th>
-        <th style="border: 1px solid #444; padding: 8px;">Total Size</th>
-      </tr>
-    </thead>
+  .summary-strip code {
+    padding: 4px 7px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #080d15;
+    color: #bae6fd;
+  }
 
-    <tbody>
-      <%= for flow <- @analysis_result["baseline_flows"] do %>
-        <tr>
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["src_ip"] %>:<%= flow["src_port"] %>
-          </td>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
-          </td>
+  .stat-card {
+    min-height: 116px;
+    padding: 18px;
+    overflow: hidden;
+    position: relative;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["protocol"] %>
-          </td>
+  .stat-card::after {
+    content: "";
+    position: absolute;
+    right: -30px;
+    bottom: -45px;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: var(--stat-glow, rgba(56, 189, 248, 0.12));
+    filter: blur(3px);
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["service"] %>
-          </td>
+  .stat-label {
+    position: relative;
+    z-index: 1;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["packet_count"] %>
-          </td>
+  .stat-value {
+    position: relative;
+    z-index: 1;
+    margin-top: 10px;
+    font-size: 31px;
+    font-weight: 800;
+    line-height: 1;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["total_size"] %> bytes
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  .stat-note {
+    position: relative;
+    z-index: 1;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 12px;
+  }
 
+  .section {
+    margin-top: 20px;
+  }
 
-  <h2>Network Graph View</h2>
+  .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
 
-  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <p style="color: #aaa; margin-top: 0;">
-      Temporary graph-style view of observed source to destination conenctions
-    </p>
+  .section-title {
+    margin: 0;
+    font-size: 19px;
+  }
 
-    <%= for flow <- @analysis_result["test_flows"] do %>
-      <% matching_alert =
-        Enum.find(@analysis_result["alerts"], fn alert ->
-          alert_flow = alert["flow"]
-            alert_flow["src_ip"] == flow["src_ip"] &&
-            alert_flow["dst_ip"] == flow["dst_ip"] &&
-            alert_flow["dst_port"] == flow["dst_port"]
-        end)
-      %>
+  .section-description {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
 
-      <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #444; background: #111; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <span style="border: 1px solid #555; padding: 6px 10px; background: #1b1b1b; font-weight: bold;">
-          <%= flow["src_ip"] %>
-        </span>
+  .graph-card {
+    overflow: hidden;
+  }
 
-        <span style="color: #888; font-size: 18px;">
-          →
-        </span>
+  .graph-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #0a111c;
+  }
 
-        <span style="border: 1px solid #555; padding: 6px 10px; background: #1b1b1b; font-weight: bold;">
-          <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
-        </span>
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    color: var(--muted);
+    font-size: 12px;
+  }
 
-        <span style="color: #aaa;">
-          <%= flow["protocol"] %> / <%= flow["service"] %>
-        </span>
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
 
-        <%= if matching_alert do %>
-          <span style="color: #ff7777; font-weight: bold;">
-            <%= matching_alert["risk_level"] %> RISK
-          </span>
-        <% else %>
-          <span style="color: lightgreen; font-weight: bold;">
-            NORMAL
-          </span>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
 
+  .legend-line {
+    width: 22px;
+    height: 3px;
+    border-radius: 999px;
+  }
 
-  <h2> Activity Log</h2>
+  .graph-buttons {
+    display: flex;
+    gap: 8px;
+  }
 
-  <div style="background: #1b1b1b; padding: 16px; border: 1px solid #333; margin-bottom: 24px;">
-    <p style="color: #aaa; margin-top: 0;">
-      Temporary log-style view of observed source to destination conenctions
-    </p>
+  .graph-button {
+    padding: 8px 11px;
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    background: #101a28;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 
-    <%= for flow <- @analysis_result["test_flows"] do %>
-      <% matching_alert =
-        Enum.find(@analysis_result["alerts"], fn alert ->
-          alert_flow = alert["flow"]
-            alert_flow["src_ip"] == flow["src_ip"] &&
-            alert_flow["dst_ip"] == flow["dst_ip"] &&
-            alert_flow["dest_port"] == flow["dest_port"]
-        end)
-      %>
+  .graph-button:hover {
+    border-color: var(--blue);
+    background: #142237;
+  }
 
-      <div style="border-bottom: 1px solid #333; padding: 10px 0;">
-        <%= if matching_alert do %>
-          <span style="color: #ff7777; font-weight: bold;">
-            [<%= matching_alert["risk_level"] %> Risk ]
-          </span>
-        <% else %>
-          <span style="margin: 0; color: lightgreen; font-weight: bold;">
-            NORMAL
-          </span>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
+  .graph-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    min-height: 610px;
+  }
 
+  .graph-area {
+    position: relative;
+    min-width: 0;
+    border-right: 1px solid var(--border);
+    background:
+      linear-gradient(rgba(45, 65, 90, 0.11) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 65, 90, 0.11) 1px, transparent 1px),
+      radial-gradient(circle at center, rgba(56, 189, 248, 0.06), transparent 55%),
+      #060b12;
+    background-size: 28px 28px, 28px 28px, auto, auto;
+  }
 
-  <h2>Test Traffic Flows</h2>
+  #network-graph {
+    width: 100%;
+    height: 610px;
+  }
 
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <thead>
-      <tr style="background: #222;">
-        <th style="border: 1px solid #444; padding: 8px;">Source</th>
-        <th style="border: 1px solid #444; padding: 8px;">Destination</th>
-        <th style="border: 1px solid #444; padding: 8px;">Protocol</th>
-        <th style="border: 1px solid #444; padding: 8px;">Service</th>
-        <th style="border: 1px solid #444; padding: 8px;">Packets</th>
-        <th style="border: 1px solid #444; padding: 8px;">Total Size</th>
-      </tr>
-    </thead>
+  .graph-inspector {
+    padding: 20px;
+    background: #0a111c;
+  }
 
-    <tbody>
-      <%= for flow <- @analysis_result["test_flows"] do %>
-        <tr>
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["src_ip"] %>:<%= flow["src_port"] %>
-          </td>
+  .inspector-eyebrow {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
-          </td>
+  .inspector-title {
+    margin: 9px 0 5px;
+    overflow-wrap: anywhere;
+    font-size: 20px;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["protocol"] %>
-          </td>
+  .inspector-subtitle {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["service"] %>
-          </td>
+  .inspector-list {
+    display: grid;
+    gap: 10px;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["packet_count"] %>
-          </td>
+  .inspector-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
 
-          <td style="border: 1px solid #444; padding: 8px;">
-            <%= flow["total_size"] %> bytes
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  .inspector-row strong {
+    max-width: 150px;
+    color: var(--text);
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
 
+  .inspector-status {
+    display: inline-flex;
+    margin-top: 18px;
+    padding: 7px 10px;
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    background: #101a28;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
 
-  <h2>Alerts</h2>
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
 
-  <%= if Enum.empty?(@analysis_result["alerts"]) do %>
-    <p style="color: lightgreen;">No unusual activity detected.</p>
-  <% else %>
-    <%= for alert <- @analysis_result["alerts"] do %>
-      <div style="background: #1b1b1b; border: 1px solid #884444; padding: 16px; margin-bottom: 16px;">
-        <h3 style="color: #ff7777; margin-top: 0;"><%= alert["type"] %></h3>
+  .panel-content {
+    padding: 18px;
+  }
 
-        <p><b>Risk Score:</b> <%= alert["risk_score"] %></p>
-        <p><b>Risk Level:</b> <%= alert["risk_level"] %></p>
+  .list {
+    display: grid;
+    gap: 8px;
+  }
 
-        <% flow = alert["flow"] %>
+  .list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #0a111b;
+  }
 
-        <p>
-          <b>Flow:</b>
-          <%= flow["src_ip"] %>:<%= flow["src_port"] %>
-          →
-          <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
-          (<%= flow["protocol"] %>)
+  .list-main {
+    min-width: 0;
+  }
+
+  .list-title {
+    overflow: hidden;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .list-subtitle {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .list-value {
+    color: #bae6fd;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .progress-track {
+    height: 5px;
+    margin-top: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #162233;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+  }
+
+  .profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .profile-item {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #0a111b;
+  }
+
+  .profile-label {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .profile-value {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .data-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+    background: #0a111b;
+  }
+
+  .data-table th {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-bright);
+    background: #101a28;
+    color: #a9b8cc;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .data-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    color: #cad4e1;
+    font-size: 12px;
+  }
+
+  .data-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.045);
+  }
+
+  .service-badge,
+  .risk-badge {
+    display: inline-flex;
+    padding: 5px 8px;
+    border: 1px solid var(--border-bright);
+    border-radius: 999px;
+    background: #111b2a;
+    font-size: 11px;
+    font-weight: 750;
+  }
+
+  .alerts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .alert-card {
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 12px;
+    background: #0a111b;
+  }
+
+  .alert-card.low {
+    border-left-color: var(--yellow);
+  }
+
+  .alert-card.medium {
+    border-left-color: var(--orange);
+  }
+
+  .alert-card.high {
+    border-left-color: var(--red);
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 13px;
+  }
+
+  .alert-title {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .alert-flow {
+    margin: 0;
+    color: #d9e4f1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .alert-reasons {
+    margin: 12px 0 0;
+    padding-left: 19px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .empty-state {
+    padding: 28px;
+    border: 1px dashed rgba(52, 211, 153, 0.45);
+    border-radius: 12px;
+    background: rgba(52, 211, 153, 0.05);
+    color: #a7f3d0;
+    text-align: center;
+  }
+
+  .footer-note {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: #5f6e83;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    .stats-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .graph-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .graph-area {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .nbm-page {
+      padding: 16px;
+    }
+
+    .nbm-header {
+      flex-direction: column;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-grid,
+    .alerts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .graph-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>
+
+<div class="nbm-page">
+  <div class="nbm-container">
+    <header class="nbm-header">
+      <div>
+        <h1 class="nbm-title">Network Behaviour Monitor</h1>
+
+        <p class="nbm-subtitle">
+          Baseline-driven network traffic analysis with local packet capture,
+          flow aggregation, risk scoring and explainable anomaly detection.
         </p>
-
-        <p><b>Service:</b> <%= flow["service"] %></p>
-
-        <p><b>Reasons:</b></p>
-        <ul>
-          <%= for reason <- alert["reasons"] do %>
-            <li><%= reason %></li>
-          <% end %>
-        </ul>
       </div>
-    <% end %>
-  <% end %>
 
-  <hr style="border-color: #333; margin-top: 32px;">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        Analysis ready
+      </div>
+    </header>
 
-  <p style="color: #777; font-size: 14px;">
-    Data loaded from analysis_result.json. This page is only for local project demonstration.
-  </p>
+    <div class="card summary-strip">
+      <span>
+        <strong>Generated:</strong>
+        <%= @analysis_result["generated_at"] %>
+      </span>
+
+      <span>
+        <strong>Local device:</strong>
+        <%= local_ip %>
+      </span>
+
+      <span>
+        <strong>Refresh:</strong>
+        <code>py .\src\main.py</code>
+      </span>
+    </div>
+
+    <section class="stats-grid">
+      <div class="card stat-card" style="--stat-glow: rgba(56, 189, 248, 0.18);">
+        <div class="stat-label">Baseline flows</div>
+        <div class="stat-value"><%= length(baseline_flows) %></div>
+        <div class="stat-note">Normal behaviour samples</div>
+      </div>
+
+      <div class="card stat-card" style="--stat-glow: rgba(56, 189, 248, 0.18);">
+        <div class="stat-label">Test flows</div>
+        <div class="stat-value"><%= length(test_flows) %></div>
+        <div class="stat-note">Observed connections</div>
+      </div>
+
+      <div class="card stat-card" style="--stat-glow: rgba(248, 113, 113, 0.18);">
+        <div class="stat-label">Total alerts</div>
+        <div class="stat-value"><%= length(alerts) %></div>
+        <div class="stat-note">Flows requiring review</div>
+      </div>
+
+      <div class="card stat-card" style="--stat-glow: rgba(250, 204, 21, 0.16);">
+        <div class="stat-label">Low / Medium</div>
+        <div class="stat-value"><%= low_alerts %> / <%= medium_alerts %></div>
+        <div class="stat-note">Lower-severity findings</div>
+      </div>
+
+      <div class="card stat-card" style="--stat-glow: rgba(239, 68, 68, 0.2);">
+        <div class="stat-label">High risk</div>
+        <div class="stat-value"><%= high_alerts %></div>
+        <div class="stat-note">Priority investigations</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Live Network Map</h2>
+
+          <p class="section-description">
+            Select a host or connection to inspect its traffic details.
+          </p>
+        </div>
+      </div>
+
+      <div class="card graph-card">
+        <div class="graph-toolbar">
+          <div class="legend">
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #34d399;"></span>
+              Local device
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #38bdf8;"></span>
+              Normal host
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-dot" style="background: #f87171;"></span>
+              Alert host
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-line" style="background: #41516a;"></span>
+              Normal flow
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-line" style="background: #facc15;"></span>
+              Low risk
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-line" style="background: #fb923c;"></span>
+              Medium risk
+            </span>
+
+            <span class="legend-item">
+              <span class="legend-line" style="background: #f87171;"></span>
+              High risk
+            </span>
+          </div>
+
+          <div class="graph-buttons">
+            <button id="fit-graph-button" class="graph-button" type="button">
+              Fit graph
+            </button>
+
+            <button id="reset-graph-button" class="graph-button" type="button">
+              Reset view
+            </button>
+          </div>
+        </div>
+
+        <div class="graph-layout">
+          <div class="graph-area">
+            <div id="network-graph"></div>
+          </div>
+
+          <aside class="graph-inspector">
+            <div class="inspector-eyebrow">Selection details</div>
+
+            <h3 id="inspector-title" class="inspector-title">
+              <%= local_ip %>
+            </h3>
+
+            <p id="inspector-subtitle" class="inspector-subtitle">
+              Select a node or connection in the graph to inspect it.
+            </p>
+
+            <div class="inspector-list">
+              <div class="inspector-row">
+                <span>Type</span>
+                <strong id="inspector-type">Local device</strong>
+              </div>
+
+              <div class="inspector-row">
+                <span>Connections</span>
+                <strong id="inspector-connections">
+                  <%= length(test_flows) %>
+                </strong>
+              </div>
+
+              <div class="inspector-row">
+                <span>Protocol</span>
+                <strong id="inspector-protocol">Multiple</strong>
+              </div>
+
+              <div class="inspector-row">
+                <span>Service</span>
+                <strong id="inspector-service">Multiple</strong>
+              </div>
+
+              <div class="inspector-row">
+                <span>Packets</span>
+                <strong id="inspector-packets">
+                  <%= Enum.sum(Enum.map(test_flows, &(&1["packet_count"] || 0))) %>
+                </strong>
+              </div>
+
+              <div class="inspector-row">
+                <span>Transferred</span>
+                <strong id="inspector-size">
+                  <%= Enum.sum(Enum.map(test_flows, &(&1["total_size"] || 0))) %> bytes
+                </strong>
+              </div>
+            </div>
+
+            <span id="inspector-status" class="inspector-status">
+              Monitoring source
+            </span>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dashboard-grid">
+      <div class="card">
+        <div class="panel-content">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Top Talkers</h2>
+
+              <p class="section-description">
+                Destinations receiving the most data.
+              </p>
+            </div>
+          </div>
+
+          <div class="list">
+            <%
+              max_talker_size =
+                top_talkers
+                |> Enum.map(&(&1["total_size"] || 0))
+                |> Enum.max(fn -> 1 end)
+            %>
+
+            <%= for talker <- Enum.take(top_talkers, 8) do %>
+              <%
+                total_size = talker["total_size"] || 0
+
+                percentage =
+                  if max_talker_size > 0 do
+                    total_size / max_talker_size * 100
+                  else
+                    0
+                  end
+              %>
+
+              <div class="list-row">
+                <div class="list-main">
+                  <div class="list-title"><%= talker["dst_ip"] %></div>
+
+                  <div class="list-subtitle">Destination host</div>
+
+                  <div class="progress-track">
+                    <div
+                      class="progress-fill"
+                      style={"width: #{percentage}%;"}
+                    >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="list-value">
+                  <%= total_size %> B
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="panel-content">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Protocol Distribution</h2>
+
+              <p class="section-description">
+                Number of aggregated flows per protocol.
+              </p>
+            </div>
+          </div>
+
+          <div class="list">
+            <%= for {protocol, count} <- protocol_distribution do %>
+              <div class="list-row">
+                <div class="list-main">
+                  <div class="list-title"><%= protocol %></div>
+
+                  <div class="list-subtitle">
+                    Network protocol
+                  </div>
+                </div>
+
+                <div class="list-value">
+                  <%= count %> flows
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Baseline Profile</h2>
+
+          <p class="section-description">
+            Behaviour learned from the normal traffic capture.
+          </p>
+        </div>
+      </div>
+
+      <div class="card profile-grid">
+        <div class="profile-item">
+          <div class="profile-label">Known source IPs</div>
+
+          <div class="profile-value">
+            <%= Enum.join(known_src_ips, ", ") %>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-label">Known protocols</div>
+
+          <div class="profile-value">
+            <%= Enum.join(known_protocols, ", ") %>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-label">Known destination ports</div>
+
+          <div class="profile-value">
+            <%= Enum.join(Enum.map(known_dst_ports, &to_string/1), ", ") %>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-label">Known services</div>
+
+          <div class="profile-value">
+            <%= Enum.join(known_services, ", ") %>
+          </div>
+        </div>
+
+        <div class="profile-item" style="grid-column: 1 / -1;">
+          <div class="profile-label">Known destination IPs</div>
+
+          <div class="profile-value">
+            <%= Enum.join(known_dst_ips, ", ") %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Alerts</h2>
+
+          <p class="section-description">
+            Explainable findings produced by the anomaly detection engine.
+          </p>
+        </div>
+      </div>
+
+      <%= if Enum.empty?(alerts) do %>
+        <div class="empty-state">
+          No unusual activity was detected in this analysis.
+        </div>
+      <% else %>
+        <div class="alerts-grid">
+          <%= for alert <- alerts do %>
+            <% flow = alert["flow"] %>
+
+            <div class={"alert-card #{String.downcase(alert["risk_level"] || "low")}"}>
+              <div class="alert-header">
+                <h3 class="alert-title">
+                  <%= alert["type"] %>
+                </h3>
+
+                <span class="risk-badge">
+                  <%= alert["risk_level"] %> · <%= alert["risk_score"] %>
+                </span>
+              </div>
+
+              <p class="alert-flow">
+                <%= flow["src_ip"] %>:<%= flow["src_port"] %>
+                →
+                <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
+              </p>
+
+              <p style="margin: 8px 0 0; color: var(--muted); font-size: 12px;">
+                <%= flow["protocol"] %> · <%= flow["service"] %> ·
+                <%= flow["packet_count"] %> packets ·
+                <%= flow["total_size"] %> bytes
+              </p>
+
+              <ul class="alert-reasons">
+                <%= for reason <- alert["reasons"] do %>
+                  <li><%= reason %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Test Traffic Flows</h2>
+
+          <p class="section-description">
+            Aggregated outbound connections from the monitored device.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Protocol</th>
+              <th>Service</th>
+              <th>Packets</th>
+              <th>Total size</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <%= for flow <- test_flows do %>
+              <tr>
+                <td>
+                  <%= flow["src_ip"] %>:<%= flow["src_port"] %>
+                </td>
+
+                <td>
+                  <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
+                </td>
+
+                <td><%= flow["protocol"] %></td>
+
+                <td>
+                  <span class="service-badge">
+                    <%= flow["service"] %>
+                  </span>
+                </td>
+
+                <td><%= flow["packet_count"] %></td>
+                <td><%= flow["total_size"] %> bytes</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Baseline Traffic Flows</h2>
+
+          <p class="section-description">
+            Connections used to create the normal behaviour profile.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Protocol</th>
+              <th>Service</th>
+              <th>Packets</th>
+              <th>Total size</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <%= for flow <- baseline_flows do %>
+              <tr>
+                <td>
+                  <%= flow["src_ip"] %>:<%= flow["src_port"] %>
+                </td>
+
+                <td>
+                  <%= flow["dst_ip"] %>:<%= flow["dst_port"] %>
+                </td>
+
+                <td><%= flow["protocol"] %></td>
+
+                <td>
+                  <span class="service-badge">
+                    <%= flow["service"] %>
+                  </span>
+                </td>
+
+                <td><%= flow["packet_count"] %></td>
+                <td><%= flow["total_size"] %> bytes</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Local demonstration dashboard · Data loaded from analysis_result.json
+    </p>
+  </div>
 </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const flows = <%= Jason.encode!(@analysis_result["test_flows"]) |> Phoenix.HTML.raw() %>;
-    const alerts = <%= Jason.encode!(@analysis_result["alerts"]) |> Phoenix.HTML.raw() %>;
+    const graphContainer = document.getElementById("network-graph");
 
-    const elements = [];
-    const nodeIds = new Set();
+    if (!graphContainer || typeof cytoscape === "undefined") {
+      return;
+    }
+
+    const flows =
+      <%= Jason.encode!(test_flows) |> Phoenix.HTML.raw() %>;
+
+    const alerts =
+      <%= Jason.encode!(alerts) |> Phoenix.HTML.raw() %>;
+
+    const localIp =
+      <%= Jason.encode!(local_ip) |> Phoenix.HTML.raw() %>;
 
     const alertDestinations = new Set(
       alerts.map((alert) => alert.flow.dst_ip)
     );
 
+    const destinationRisk = new Map();
+
+    const riskPriority = {
+      Normal: 0,
+      Low: 1,
+      Medium: 2,
+      High: 3
+    };
+
+    for (const alert of alerts) {
+      const destination = alert.flow.dst_ip;
+      const currentRisk = destinationRisk.get(destination) || "Normal";
+
+      if (
+        riskPriority[alert.risk_level] >
+        riskPriority[currentRisk]
+      ) {
+        destinationRisk.set(destination, alert.risk_level);
+      }
+    }
+
+    const nodeIds = new Set();
+    const elements = [];
+
+    const ensureNode = (id) => {
+      if (nodeIds.has(id)) {
+        return;
+      }
+
+      const isLocal = id === localIp;
+      const hasAlert = alertDestinations.has(id);
+
+      elements.push({
+        data: {
+          id,
+          label: isLocal ? "This Device" : id,
+          fullLabel: id,
+          nodeType: isLocal
+            ? "local"
+            : hasAlert
+              ? "alert"
+              : "normal",
+          riskLevel: destinationRisk.get(id) || "Normal"
+        }
+      });
+
+      nodeIds.add(id);
+    };
+
     for (const flow of flows) {
-      const sourceId = flow.src_ip;
-      const destinationId = flow.dst_ip;
-
-      if (!nodeIds.has(sourceId)) {
-        elements.push({
-          data: {
-            id: sourceId,
-            label: sourceId
-          }
-        });
-
-        nodeIds.add(sourceId);
-      }
-
-      if (!nodeIds.has(destinationId)) {
-        elements.push({
-          data: {
-            id: destinationId,
-            label: destinationId,
-            alert: alertDestinations.has(destinationId) ? "yes" : "no"
-          }
-        });
-
-        nodeIds.add(destinationId);
-      }
+      ensureNode(flow.src_ip);
+      ensureNode(flow.dst_ip);
 
       const matchingAlert = alerts.find((alert) => {
         const alertFlow = alert.flow;
@@ -315,130 +1201,407 @@
         return (
           alertFlow.src_ip === flow.src_ip &&
           alertFlow.dst_ip === flow.dst_ip &&
-          alertFlow.dst_port === flow.dst_port
+          alertFlow.src_port === flow.src_port &&
+          alertFlow.dst_port === flow.dst_port &&
+          alertFlow.protocol === flow.protocol
         );
       });
 
       elements.push({
         data: {
-          id: `${flow.src_ip}-${flow.dst_ip}-${flow.src_port}-${flow.dst_port}`,
-          source: sourceId,
-          target: destinationId,
-          label: `${flow.protocol} / ${flow.service}`,
-          riskLevel: matchingAlert ? matchingAlert.risk_level : "Normal"
+          id:
+            `${flow.src_ip}-${flow.dst_ip}-` +
+            `${flow.src_port}-${flow.dst_port}-` +
+            `${flow.protocol}`,
+
+          source: flow.src_ip,
+          target: flow.dst_ip,
+
+          protocol: flow.protocol,
+          service: flow.service,
+          packets: flow.packet_count,
+          totalSize: flow.total_size,
+
+          riskLevel: matchingAlert
+            ? matchingAlert.risk_level
+            : "Normal"
         }
       });
     }
 
-    cytoscape({
-      container: document.getElementById("network-graph"),
+    const graph = cytoscape({
+      container: graphContainer,
 
-      elements: elements,
+      elements,
+
+      minZoom: 0.25,
+      maxZoom: 2.5,
+      wheelSensitivity: 0.18,
+
+      selectionType: "single",
 
       style: [
-          {
-            selector: "node",
-            style: {
-              "background-color": "#3b82f6",
-              "label": "data(label)",
-              "color": "#ffffff",
-              "font-size": "11px",
-              "text-valign": "bottom",
-              "text-margin-y": "8px",
-              "width": 35,
-              "height": 35,
-              "border-width": 2,
-              "border-color": "#222"
-            }
-          },
+        {
+          selector: "node",
+          style: {
+            "width": 34,
+            "height": 34,
+            "background-color": "#38bdf8",
+            "border-width": 3,
+            "border-color": "#075985",
 
-          {
-            selector: 'node[id = "<%= get_in(@analysis_result, ["baseline_profile", "known_src_ips"]) |> List.first() %>"]',
-            style: {
-              "background-color": "#22c55e",
-              "width": 60,
-              "height": 60,
-              "font-size": "14px",
-              "font-weight": "bold",
-              "border-width": 4,
-              "border-color": "#ffffff"
-            }
-          },
+            "label": "data(label)",
+            "color": "#dbeafe",
+            "font-size": 10,
+            "font-weight": 650,
 
-          {
-            selector: 'node[alert = "yes"]',
-            style: {
-              "background-color": "#ef4444",
-              "border-width": 3,
-              "border-color": "#ffffff"
-            }
-          },
+            "text-valign": "bottom",
+            "text-halign": "center",
+            "text-margin-y": 9,
 
-          {
-            selector: "edge",
-            style: {
-              "width": 2,
-              "line-color": "#666",
-              "target-arrow-color": "#666",
-              "target-arrow-shape": "triangle",
-              "curve-style": "bezier",
+            "text-background-color": "#060b12",
+            "text-background-opacity": 0.82,
+            "text-background-padding": 3,
+            "text-background-shape": "roundrectangle",
 
-              "label": "data(label)",
-              "font-size": "9px",
-              "color": "#aaa",
-
-              "text-background-color": "#111",
-              "text-background-opacity": 0.8,
-              "text-background-padding": "3px"
-            }
-          },
-
-          {
-            selector: 'edge[riskLevel = "Low"]',
-            style: {
-              "line-color": "#facc15",
-              "target-arrow-color": "#facc15"
-            }
-          },
-
-          {
-            selector: 'edge[riskLevel = "Medium"]',
-            style: {
-              "line-color": "#fb923c",
-              "target-arrow-color": "#fb923c"
-            }
-          },
-
-          {
-            selector: 'edge[riskLevel = "High"]',
-            style: {
-              "line-color": "#ef4444",
-              "target-arrow-color": "#ef4444"
-            }
+            "overlay-opacity": 0
           }
-        ],
+        },
+
+        {
+          selector: 'node[nodeType = "local"]',
+          style: {
+            "width": 70,
+            "height": 70,
+
+            "background-color": "#34d399",
+            "border-width": 5,
+            "border-color": "#a7f3d0",
+
+            "font-size": 13,
+            "font-weight": 800,
+            "color": "#d1fae5"
+          }
+        },
+
+        {
+          selector: 'node[nodeType = "alert"]',
+          style: {
+            "width": 45,
+            "height": 45,
+
+            "background-color": "#f87171",
+            "border-width": 4,
+            "border-color": "#fecaca",
+
+            "color": "#fee2e2",
+            "font-weight": 750
+          }
+        },
+
+        {
+          selector: "node:selected",
+          style: {
+            "border-width": 6,
+            "border-color": "#ffffff",
+            "overlay-opacity": 0
+          }
+        },
+
+        {
+          selector: "edge",
+          style: {
+            "width": 2,
+            "line-color": "#41516a",
+
+            "target-arrow-shape": "triangle",
+            "target-arrow-color": "#41516a",
+            "arrow-scale": 0.9,
+
+            "curve-style": "unbundled-bezier",
+            "control-point-distances": 35,
+            "control-point-weights": 0.5,
+
+            "opacity": 0.72,
+            "overlay-opacity": 0
+          }
+        },
+
+        {
+          selector: 'edge[riskLevel = "Low"]',
+          style: {
+            "width": 3,
+            "line-color": "#facc15",
+            "target-arrow-color": "#facc15",
+            "opacity": 0.95
+          }
+        },
+
+        {
+          selector: 'edge[riskLevel = "Medium"]',
+          style: {
+            "width": 4,
+            "line-color": "#fb923c",
+            "target-arrow-color": "#fb923c",
+            "opacity": 1
+          }
+        },
+
+        {
+          selector: 'edge[riskLevel = "High"]',
+          style: {
+            "width": 5,
+            "line-color": "#f87171",
+            "target-arrow-color": "#f87171",
+            "opacity": 1
+          }
+        },
+
+        {
+          selector: "edge:selected",
+          style: {
+            "width": 5,
+            "line-color": "#ffffff",
+            "target-arrow-color": "#ffffff",
+            "opacity": 1,
+            "overlay-opacity": 0
+          }
+        },
+
+        {
+          selector: ".faded",
+          style: {
+            "opacity": 0.12
+          }
+        },
+
+        {
+          selector: ".highlighted",
+          style: {
+            "opacity": 1
+          }
+        }
+      ],
 
       layout: {
         name: "concentric",
         animate: false,
-        padding: 40,
-        minNodeSpacing: 60,
+        padding: 55,
+        minNodeSpacing: 75,
+        avoidOverlap: true,
+
         concentric: (node) => {
-          const localIp =
-            "<%= get_in(@analysis_result, ["baseline_profile", "known_src_ips"]) |> List.first() %>";
-
           if (node.id() === localIp) {
-            return 2;
+            return 100;
           }
 
-          if (node.data("alert") === "yes") {
-            return 1;
+          if (node.data("nodeType") === "alert") {
+            return 50;
           }
 
-          return 0;
+          return 10;
         },
+
         levelWidth: () => 1
       }
+    });
+
+    const inspectorTitle =
+      document.getElementById("inspector-title");
+
+    const inspectorSubtitle =
+      document.getElementById("inspector-subtitle");
+
+    const inspectorType =
+      document.getElementById("inspector-type");
+
+    const inspectorConnections =
+      document.getElementById("inspector-connections");
+
+    const inspectorProtocol =
+      document.getElementById("inspector-protocol");
+
+    const inspectorService =
+      document.getElementById("inspector-service");
+
+    const inspectorPackets =
+      document.getElementById("inspector-packets");
+
+    const inspectorSize =
+      document.getElementById("inspector-size");
+
+    const inspectorStatus =
+      document.getElementById("inspector-status");
+
+    const updateNodeInspector = (node) => {
+      const connectedEdges = node.connectedEdges();
+
+      const protocols = [
+        ...new Set(
+          connectedEdges.map((edge) => edge.data("protocol"))
+        )
+      ].filter(Boolean);
+
+      const services = [
+        ...new Set(
+          connectedEdges.map((edge) => edge.data("service"))
+        )
+      ].filter(Boolean);
+
+      const packetCount = connectedEdges.reduce(
+        (total, edge) => total + Number(edge.data("packets") || 0),
+        0
+      );
+
+      const totalSize = connectedEdges.reduce(
+        (total, edge) => total + Number(edge.data("totalSize") || 0),
+        0
+      );
+
+      const nodeType = node.data("nodeType");
+      const riskLevel = node.data("riskLevel") || "Normal";
+
+      inspectorTitle.textContent = node.data("fullLabel");
+      inspectorSubtitle.textContent =
+        nodeType === "local"
+          ? "Monitored local network device."
+          : "Remote destination observed in captured traffic.";
+
+      inspectorType.textContent =
+        nodeType === "local"
+          ? "Local device"
+          : nodeType === "alert"
+            ? "Alert destination"
+            : "Normal destination";
+
+      inspectorConnections.textContent = connectedEdges.length;
+
+      inspectorProtocol.textContent =
+        protocols.length > 0
+          ? protocols.join(", ")
+          : "Not available";
+
+      inspectorService.textContent =
+        services.length > 0
+          ? services.join(", ")
+          : "Not available";
+
+      inspectorPackets.textContent = packetCount;
+      inspectorSize.textContent = `${totalSize} bytes`;
+
+      inspectorStatus.textContent =
+        nodeType === "local"
+          ? "Monitoring source"
+          : riskLevel === "Normal"
+            ? "Normal destination"
+            : `${riskLevel} risk destination`;
+    };
+
+    const updateEdgeInspector = (edge) => {
+      inspectorTitle.textContent =
+        `${edge.source().id()} → ${edge.target().id()}`;
+
+      inspectorSubtitle.textContent =
+        "Aggregated network flow between two hosts.";
+
+      inspectorType.textContent = "Network connection";
+      inspectorConnections.textContent = "1";
+      inspectorProtocol.textContent = edge.data("protocol");
+      inspectorService.textContent = edge.data("service");
+      inspectorPackets.textContent = edge.data("packets");
+      inspectorSize.textContent = `${edge.data("totalSize")} bytes`;
+
+      inspectorStatus.textContent =
+        edge.data("riskLevel") === "Normal"
+          ? "Normal connection"
+          : `${edge.data("riskLevel")} risk connection`;
+    };
+
+    const highlightElement = (element) => {
+      graph.elements().addClass("faded");
+
+      element.removeClass("faded").addClass("highlighted");
+
+      if (element.isNode()) {
+        element
+          .closedNeighborhood()
+          .removeClass("faded")
+          .addClass("highlighted");
+      } else {
+        element
+          .connectedNodes()
+          .removeClass("faded")
+          .addClass("highlighted");
+      }
+    };
+
+    graph.on("tap", "node", (event) => {
+      const node = event.target;
+
+      highlightElement(node);
+      updateNodeInspector(node);
+    });
+
+    graph.on("tap", "edge", (event) => {
+      const edge = event.target;
+
+      highlightElement(edge);
+      updateEdgeInspector(edge);
+    });
+
+    graph.on("tap", (event) => {
+      if (event.target === graph) {
+        graph.elements().removeClass("faded highlighted");
+        graph.elements().unselect();
+      }
+    });
+
+    graph.on("mouseover", "node, edge", () => {
+      graphContainer.style.cursor = "pointer";
+    });
+
+    graph.on("mouseout", "node, edge", () => {
+      graphContainer.style.cursor = "default";
+    });
+
+    document
+      .getElementById("fit-graph-button")
+      ?.addEventListener("click", () => {
+        graph.fit(graph.elements(), 55);
+      });
+
+    document
+      .getElementById("reset-graph-button")
+      ?.addEventListener("click", () => {
+        graph.elements().removeClass("faded highlighted");
+        graph.elements().unselect();
+
+        graph.layout({
+          name: "concentric",
+          animate: true,
+          animationDuration: 350,
+          padding: 55,
+          minNodeSpacing: 75,
+          avoidOverlap: true,
+
+          concentric: (node) => {
+            if (node.id() === localIp) {
+              return 100;
+            }
+
+            if (node.data("nodeType") === "alert") {
+              return 50;
+            }
+
+            return 10;
+          },
+
+          levelWidth: () => 1
+        }).run();
+      });
+
+    graph.ready(() => {
+      graph.fit(graph.elements(), 55);
     });
   });
 </script>
