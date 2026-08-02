@@ -281,6 +281,13 @@
     background: #142237;
   }
 
+  .graph-filter-button.active {
+    border-color: var(--blue);
+    background: rgba(56, 189, 248, 0.14);
+    color: #bae6fd;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.12)
+  }
+
   .graph-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 290px;
@@ -300,8 +307,19 @@
   }
 
   #network-graph {
+    position: relative;
+    z-index: 1;
     width: 100%;
     height: 610px;
+  }
+
+  #packet-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
   .graph-inspector {
@@ -701,7 +719,7 @@
         </div>
       </div>
 
-      <div class="card graph-card">
+      <div class ="card graph-card">
         <div class="graph-toolbar">
           <div class="legend">
             <span class="legend-item">
@@ -715,7 +733,8 @@
             </span>
 
             <span class="legend-item">
-              <span class="legend-dot" style="background: #f87171;"></span>
+              <span class="legend-dot" 
+              style="background: #f87171; transform: rotate(45deg); border-radius: 2px"></span>
               Alert host
             </span>
 
@@ -740,13 +759,62 @@
             </span>
           </div>
 
+
           <div class="graph-buttons">
-            <button id="fit-graph-button" class="graph-button" type="button">
-              Fit graph
+            <button
+              class="graph-button graph-filter-button active"
+              data-filter="all"
+              type="button"
+            >
+              All traffic
             </button>
 
-            <button id="reset-graph-button" class="graph-button" type="button">
-              Reset view
+            <button
+              class="graph-button graph-filter-button"
+              data-filter="alerts"
+              type="button"
+            >
+              Alerts only
+            </button>
+
+            <button
+              class="graph-button graph-filter-button"
+              data-filter="normal"
+              type="button"
+            >
+              Normal only
+            </button>
+
+            <button
+              id="orbit-layout-button"
+              class="graph-button"
+              type="button"
+            >
+              Orbit
+            </button>
+
+            <button
+              id="force-layout-button"
+              class="graph-button"
+              type="button"
+            >
+              Force
+            </button>
+
+            <button
+              id="fit-graph-button"
+              class="graph-button"
+              type="button"
+            >
+              Fit
+            </button>
+
+            <button
+              id="reset-graph-button"
+              class="graph-button"
+              type="button"
+            >
+              Reset
             </button>
           </div>
         </div>
@@ -754,6 +822,7 @@
         <div class="graph-layout">
           <div class="graph-area">
             <div id="network-graph"></div>
+            <canvas id="packet-canvas" aria-hidden="true"></canvas>
           </div>
 
           <aside class="graph-inspector">
@@ -1244,25 +1313,28 @@
         {
           selector: "node",
           style: {
-            "width": 34,
-            "height": 34,
+            "width": 28,
+            "height": 28,
             "background-color": "#38bdf8",
             "border-width": 3,
             "border-color": "#075985",
 
-            "label": "data(label)",
+            "label": "data(fullLabel)",
             "color": "#dbeafe",
             "font-size": 10,
             "font-weight": 650,
 
             "text-valign": "bottom",
             "text-halign": "center",
-            "text-margin-y": 9,
+            "text-margin-y": 14,
 
             "text-background-color": "#060b12",
             "text-background-opacity": 0.82,
-            "text-background-padding": 3,
+            "text-background-padding": 5,
             "text-background-shape": "roundrectangle",
+
+          "text-border-width": 1,
+          "text-border-color": "#38bdf8",
 
             "overlay-opacity": 0
           }
@@ -1271,6 +1343,7 @@
         {
           selector: 'node[nodeType = "local"]',
           style: {
+            "shape": "round-rectangle",
             "width": 70,
             "height": 70,
 
@@ -1278,6 +1351,7 @@
             "border-width": 5,
             "border-color": "#a7f3d0",
 
+            "label": "data(fullLabel)",
             "font-size": 13,
             "font-weight": 800,
             "color": "#d1fae5"
@@ -1287,6 +1361,7 @@
         {
           selector: 'node[nodeType = "alert"]',
           style: {
+            "shape": "diamond",
             "width": 45,
             "height": 45,
 
@@ -1294,6 +1369,7 @@
             "border-width": 4,
             "border-color": "#fecaca",
 
+            "label": "data(label)",
             "color": "#fee2e2",
             "font-weight": 750
           }
@@ -1311,18 +1387,28 @@
         {
           selector: "edge",
           style: {
-            "width": 2,
-            "line-color": "#41516a",
+            "width": "mapData(totalSize, 0, 1000000, 1.5, 5)",
 
-            "target-arrow-shape": "triangle",
-            "target-arrow-color": "#41516a",
-            "arrow-scale": 0.9,
+            "line-color": "#64748b",
 
-            "curve-style": "unbundled-bezier",
-            "control-point-distances": 35,
-            "control-point-weights": 0.5,
 
             "opacity": 0.72,
+
+            "curve-style": "unbundled-bezier",
+            "control-point-distances": [-25, 25],
+            "control-point-weights": [0.35],
+
+            "source-arrow-shape": "triangle",
+            "source-arrow-color": "#64748b",
+
+            "target-arrow-shape": "triangle",
+            "target-arrow-color": "#64748b",
+
+            "source-distance-from-node": 3,
+            "target-distance-from-node": 3,
+
+            "arrow-scale": 0.85,
+
             "overlay-opacity": 0
           }
         },
@@ -1330,30 +1416,39 @@
         {
           selector: 'edge[riskLevel = "Low"]',
           style: {
-            "width": 3,
             "line-color": "#facc15",
+            "source-arrow-color": "#facc15",
             "target-arrow-color": "#facc15",
-            "opacity": 0.95
+            "opacity": 0.95,
+            "shadow-color": "#facc15",
+            "shadow-opacity": 0.7,
+            "shadow-blur": 12,
           }
         },
 
         {
           selector: 'edge[riskLevel = "Medium"]',
           style: {
-            "width": 4,
-            "line-color": "#fb923c",
-            "target-arrow-color": "#fb923c",
-            "opacity": 1
+            "line-color": "#f59e0b",
+            "source-arrow-color": "#f59e0b",
+            "target-arrow-color": "#f59e0b",
+            "opacity": 1,
+            "shadow-color": "#f59e0b",
+            "shadow-opacity": 0.9,
+            "shadow-blur": 18,
           }
         },
 
         {
           selector: 'edge[riskLevel = "High"]',
           style: {
-            "width": 5,
-            "line-color": "#f87171",
-            "target-arrow-color": "#f87171",
-            "opacity": 1
+            "line-color": "#ef4444",
+            "source-arrow-color": "#ef4444",
+            "target-arrow-color": "#ef4444",
+            "opacity": 1,
+            "shadow-color": "#ef4444",
+            "shadow-opacity": 0.9,
+            "shadow-blur": 18,
           }
         },
 
@@ -1362,6 +1457,7 @@
           style: {
             "width": 5,
             "line-color": "#ffffff",
+            "source-arrow-color": "#ffffff",
             "target-arrow-color": "#ffffff",
             "opacity": 1,
             "overlay-opacity": 0
@@ -1386,9 +1482,11 @@
       layout: {
         name: "concentric",
         animate: false,
-        padding: 55,
-        minNodeSpacing: 75,
+        padding: 70,
+        minNodeSpacing: 92,
         avoidOverlap: true,
+        startAngle: -Math.PI / 2,
+        clockwise: true,
 
         concentric: (node) => {
           if (node.id() === localIp) {
@@ -1403,6 +1501,178 @@
         },
 
         levelWidth: () => 1
+      }
+    });
+
+    const packetCanvas = document.getElementById("packet-canvas");
+    const packetContext = packetCanvas?.getContext("2d");
+    const graphArea = graphContainer.closest(".graph-area");
+
+    const packetColours = {
+      Normal: "#e2e8f0",
+      Low: "#facc15",
+      Medium: "#fb923c",
+      High: "#ef4444"
+    };
+
+    const packetState = new Map();
+    let packetAnimationFrame = null;
+    let lastPacketFrame = performance.now();
+
+    const resizePacketCanvas = () => {
+      if (!packetCanvas || !graphArea || !packetContext) {
+        return;
+      }
+
+      const ratio = window.devicePixelRatio || 1;
+      const width = graphArea.clientWidth;
+      const height = graphArea.clientHeight;
+
+      packetCanvas.width = Math.max(1, Math.floor(width * ratio));
+      packetCanvas.height = Math.max(1, Math.floor(height * ratio));
+      packetCanvas.style.width = `${width}px`;
+      packetCanvas.style.height = `${height}px`;
+      packetContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const quadraticPoint = (start, control, end, t) => {
+      const inverse = 1 - t;
+
+      return {
+        x:
+          inverse * inverse * start.x +
+          2 * inverse * t * control.x +
+          t * t * end.x,
+        y:
+          inverse * inverse * start.y +
+          2 * inverse * t * control.y +
+          t * t * end.y
+      };
+    };
+
+    const midpoint = (first, second) => ({
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2
+    });
+
+    const getEdgeSegments = (edge) => {
+      const start = edge.renderedSourceEndpoint();
+      const end = edge.renderedTargetEndpoint();
+      const controls = edge.renderedControlPoints();
+
+      if (!controls || controls.length === 0) {
+        return [{ start, control: midpoint(start, end), end }];
+      }
+
+      if (controls.length === 1) {
+        return [{ start, control: controls[0], end }];
+      }
+
+      return controls.map((control, index) => {
+        const segmentStart =
+          index === 0
+            ? start
+            : midpoint(controls[index - 1], control);
+
+        const segmentEnd =
+          index === controls.length - 1
+            ? end
+            : midpoint(control, controls[index + 1]);
+
+        return {
+          start: segmentStart,
+          control,
+          end: segmentEnd
+        };
+      });
+    };
+
+    const pointOnEdge = (edge, progress) => {
+      const segments = getEdgeSegments(edge);
+      const safeProgress = Math.max(0, Math.min(0.999999, progress));
+      const scaledProgress = safeProgress * segments.length;
+      const segmentIndex = Math.min(
+        segments.length - 1,
+        Math.floor(scaledProgress)
+      );
+      const localProgress = scaledProgress - segmentIndex;
+      const segment = segments[segmentIndex];
+
+      return quadraticPoint(
+        segment.start,
+        segment.control,
+        segment.end,
+        localProgress
+      );
+    };
+
+    const drawPacket = (point, colour, radius) => {
+      packetContext.beginPath();
+      packetContext.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      packetContext.fillStyle = colour;
+      packetContext.shadowColor = colour;
+      packetContext.shadowBlur = 9;
+      packetContext.fill();
+      packetContext.shadowBlur = 0;
+    };
+
+    const animatePackets = (now) => {
+      if (!packetContext || !packetCanvas) {
+        return;
+      }
+
+      const delta = Math.min(40, now - lastPacketFrame);
+      lastPacketFrame = now;
+
+      packetContext.clearRect(
+        0,
+        0,
+        packetCanvas.clientWidth,
+        packetCanvas.clientHeight
+      );
+
+      graph.edges(":visible").forEach((edge) => {
+        const id = edge.id();
+        const existing = packetState.get(id) || {
+          forward: Math.random(),
+          reverse: Math.random()
+        };
+
+        const packetCount = Number(edge.data("packets") || 1);
+        const speed = 0.00008 * Math.min(4, 1 + Math.log10(packetCount + 1));
+
+        existing.forward = (existing.forward + delta * speed) % 1;
+        existing.reverse = (existing.reverse + delta * speed * 0.82) % 1;
+        packetState.set(id, existing);
+
+        const riskLevel = edge.data("riskLevel") || "Normal";
+        const colour = packetColours[riskLevel] || packetColours.Normal;
+        const radius = riskLevel === "High" ? 3.2 : riskLevel === "Medium" ? 2.8 : 2.4;
+
+        drawPacket(
+          pointOnEdge(edge, existing.forward),
+          colour,
+          radius
+        );
+
+        drawPacket(
+          pointOnEdge(edge, 1 - existing.reverse),
+          colour,
+          Math.max(2, radius - 0.35)
+        );
+      });
+
+      packetAnimationFrame = requestAnimationFrame(animatePackets);
+    };
+
+    resizePacketCanvas();
+    window.addEventListener("resize", resizePacketCanvas);
+    graph.on("render pan zoom position layoutstop", resizePacketCanvas);
+    packetAnimationFrame = requestAnimationFrame(animatePackets);
+
+    window.addEventListener("beforeunload", () => {
+      if (packetAnimationFrame) {
+        cancelAnimationFrame(packetAnimationFrame);
       }
     });
 
@@ -1564,6 +1834,138 @@
       graphContainer.style.cursor = "default";
     });
 
+    graph.on("mouseover", "node", (event) => {
+      const node = event.target;
+
+      const originalWidth = node.width();
+      const originalHeight = node.height();
+
+      node.scratch("originalWidth", originalWidth);
+      node.scratch("originalHeight", originalHeight);
+
+      node.style({
+        "label": "data(fullLabel)",
+        "width": originalWidth + 8,
+        "height": originalHeight + 8,
+        "border-color": "#ffffff",
+        "border-width": 4
+      });
+
+      graph.elements().addClass("faded");
+      node.closedNeighborhood().removeClass("faded").addClass("highlighted");
+    });
+
+    graph.on("mouseout", "node", (event) => {
+      const node = event.target;
+
+      node.style({
+        "width": node.scratch("originalWidth"),
+        "height": node.scratch("originalHeight"),
+        "border-color":
+          node.data("nodeType") === "local"
+            ? "#a7f3d0"
+            : node.data("nodeType") === "alert"
+              ? "#fecaca"
+              : "#075985",
+        "border-width":
+          node.data("nodeType") === "local"
+            ? 5
+            : node.data("nodeType") === "alert"
+              ? 4
+              : 3
+      });
+
+      if (graph.$(":selected").empty()) {
+        graph.elements().removeClass("faded highlighted");
+      }
+    });
+
+    const runOrbitLayout = () => {
+      graph.layout({
+        name: "concentric",
+        animate: true,
+        animationDuration: 650,
+        animationEasing: "ease-in-out",
+        padding: 70,
+        minNodeSpacing: 92,
+        avoidOverlap: true,
+        startAngle: -Math.PI / 2,
+        clockwise: true,
+        concentric: (node) => {
+          if (node.id() === localIp) return 100;
+          if (node.data("nodeType") === "alert") return 50;
+          return 10;
+        },
+        levelWidth: () => 1
+      }).run();
+    };
+
+    const runForceLayout = () => {
+      graph.layout({
+        name: "cose",
+        animate: true,
+        animationDuration: 850,
+        animationEasing: "ease-in-out",
+        fit: true,
+        padding: 70,
+        randomize: true,
+        nodeRepulsion: 11000,
+        idealEdgeLength: 125,
+        edgeElasticity: 80,
+        gravity: 0.6,
+        numIter: 900
+      }).run();
+    };
+
+    document.querySelectorAll(".graph-filter-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        document
+          .querySelectorAll(".graph-filter-button")
+          .forEach((item) => item.classList.remove("active"));
+
+        button.classList.add("active");
+        const filter = button.dataset.filter;
+
+        graph.batch(() => {
+          graph.elements().show();
+
+          if (filter === "alerts") {
+            graph.edges('[riskLevel = "Normal"]').hide();
+            graph.nodes().forEach((node) => {
+              if (
+                node.id() !== localIp &&
+                node.connectedEdges(":visible").empty()
+              ) {
+                node.hide();
+              }
+            });
+          }
+
+          if (filter === "normal") {
+            graph.edges().not('[riskLevel = "Normal"]').hide();
+            graph.nodes().forEach((node) => {
+              if (
+                node.id() !== localIp &&
+                node.connectedEdges(":visible").empty()
+              ) {
+                node.hide();
+              }
+            });
+          }
+        });
+
+        graph.fit(graph.elements(":visible"), 70);
+      });
+    });
+
+    document
+      .getElementById("orbit-layout-button")
+      ?.addEventListener("click", runOrbitLayout);
+
+    document
+      .getElementById("force-layout-button")
+      ?.addEventListener("click", runForceLayout);
+
     document
       .getElementById("fit-graph-button")
       ?.addEventListener("click", () => {
@@ -1573,35 +1975,28 @@
     document
       .getElementById("reset-graph-button")
       ?.addEventListener("click", () => {
+        graph.elements().show();
         graph.elements().removeClass("faded highlighted");
         graph.elements().unselect();
 
-        graph.layout({
-          name: "concentric",
-          animate: true,
-          animationDuration: 350,
-          padding: 55,
-          minNodeSpacing: 75,
-          avoidOverlap: true,
+        document
+          .querySelectorAll(".graph-filter-button")
+          .forEach((item) => item.classList.remove("active"));
 
-          concentric: (node) => {
-            if (node.id() === localIp) {
-              return 100;
-            }
+        document
+          .querySelector('.graph-filter-button[data-filter="all"]')
+          ?.classList.add("active");
 
-            if (node.data("nodeType") === "alert") {
-              return 50;
-            }
-
-            return 10;
-          },
-
-          levelWidth: () => 1
-        }).run();
+        runOrbitLayout();
       });
 
     graph.ready(() => {
-      graph.fit(graph.elements(), 55);
+      resizePacketCanvas();
+      graph.fit(graph.elements(), 70);
+    });
+
+    graph.on("layoutstop", () => {
+      graph.fit(graph.elements(":visible"), 70);
     });
   });
 </script>
