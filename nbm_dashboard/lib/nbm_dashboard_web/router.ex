@@ -18,6 +18,7 @@ defmodule NbmDashboardWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    post "/run-analysis", PageController, :run_analysis
   end
 
   # Other scopes may use custom stacks.

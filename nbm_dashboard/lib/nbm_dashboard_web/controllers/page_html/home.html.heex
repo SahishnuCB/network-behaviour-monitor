@@ -597,6 +597,67 @@
     text-align: center;
   }
 
+  .analysis-loading-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(5, 10, 18, 0.78);
+    backdrop-filter: blur(8px);
+
+    z-index: 9999;
+  }
+
+  .analysis-loading-overlay.show {
+    display: flex;
+  }
+
+  .analysis-loading-card {
+    width: 360px;
+    padding: 32px;
+
+    text-align: center;
+
+    background: #0d1420;
+    border: 1px solid #1f2d41;
+    border-radius: 18px;
+
+    box-shadow: 0 20px 70px rgba(0,0,0,.45);
+  }
+
+  .analysis-loading-card h3 {
+    margin: 18px 0 10px;
+    font-size: 22px;
+  }
+
+  .analysis-loading-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .analysis-spinner {
+    width: 62px;
+    height: 62px;
+
+    margin: auto;
+
+    border: 5px solid rgba(56,189,248,.15);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @media (max-width: 1100px) {
     .stats-grid {
       grid-template-columns: repeat(3, 1fr);
@@ -674,6 +735,26 @@
         <strong>Refresh:</strong>
         <code>py .\src\main.py</code>
       </span>
+
+      <form
+        id="run-analysis-form"
+        action={~p"/run-analysis"}
+        method="post"
+      >
+        <input
+          type="hidden"
+          name="_csrf_token"
+          value={Plug.CSRFProtection.get_csrf_token()}
+        />
+
+        <button
+          id="run-analysis-button"
+          type="submit"
+          class="graph-button"
+        >
+          Run Analysis
+        </button>
+      </form>
     </div>
 
     <section class="stats-grid">
@@ -1187,6 +1268,18 @@
     <p class="footer-note">
       Local demonstration dashboard · Data loaded from analysis_result.json
     </p>
+  </div>
+
+  <div id="analysis-loading-overlay" class="analysis-loading-overlay">
+    <div class="analysis-loading-card">
+      <div class="analysis-spinner"></div>
+
+      <h3>Running analysis</h3>
+
+      <p id="analysis-loading-text">
+        Capturing traffic...
+      </p>
+    </div>
   </div>
 </div>
 
@@ -1881,23 +1974,59 @@
     });
 
     const runOrbitLayout = () => {
-      graph.layout({
-        name: "concentric",
-        animate: true,
-        animationDuration: 650,
-        animationEasing: "ease-in-out",
-        padding: 70,
-        minNodeSpacing: 92,
-        avoidOverlap: true,
-        startAngle: -Math.PI / 2,
-        clockwise: true,
-        concentric: (node) => {
-          if (node.id() === localIp) return 100;
-          if (node.data("nodeType") === "alert") return 50;
-          return 10;
+      const visibleNodes = graph.nodes(":visible");
+      const localNode = graph.$id(localIp);
+
+      const remoteNodes = visibleNodes.filter(
+        (node) => node.id() !== localIp
+      );
+
+      const centreX = graphContainer.clientWidth / 2;
+      const centreY = graphContainer.clientHeight / 2;
+
+      const nodesPerRing = 10;
+      const baseRadius = 155;
+      const ringGap = 115;
+
+      graph.startBatch();
+
+      localNode.position({
+        x: centreX,
+        y: centreY
+      });
+
+      remoteNodes.forEach((node, index) => {
+        const ringIndex = Math.floor(index / nodesPerRing);
+        const indexInsideRing = index % nodesPerRing;
+
+        const nodesInThisRing = Math.min(
+          nodesPerRing,
+          remoteNodes.length - ringIndex * nodesPerRing
+        );
+
+        const radius = baseRadius + ringIndex * ringGap;
+
+        const angle =
+          -Math.PI / 2 +
+          (indexInsideRing / nodesInThisRing) * Math.PI * 2 +
+          ringIndex * 0.22;
+
+        node.position({
+          x: centreX + Math.cos(angle) * radius,
+          y: centreY + Math.sin(angle) * radius
+        });
+      });
+
+      graph.endBatch();
+
+      graph.animate({
+        fit: {
+          eles: graph.elements(":visible"),
+          padding: 80
         },
-        levelWidth: () => 1
-      }).run();
+        duration: 650,
+        easing: "ease-in-out"
+      });
     };
 
     const runForceLayout = () => {
@@ -1975,28 +2104,122 @@
     document
       .getElementById("reset-graph-button")
       ?.addEventListener("click", () => {
+        graph.stop();
+
         graph.elements().show();
         graph.elements().removeClass("faded highlighted");
         graph.elements().unselect();
 
         document
           .querySelectorAll(".graph-filter-button")
-          .forEach((item) => item.classList.remove("active"));
+          .forEach((button) => button.classList.remove("active"));
 
         document
           .querySelector('.graph-filter-button[data-filter="all"]')
           ?.classList.add("active");
 
-        runOrbitLayout();
+        graph.nodes().forEach((node) => {
+          const initialPosition = node.scratch("initialPosition");
+
+          if (initialPosition) {
+            node.position(initialPosition);
+          }
+        });
+
+        graph.fit(graph.elements(), 70);
       });
 
     graph.ready(() => {
       resizePacketCanvas();
       graph.fit(graph.elements(), 70);
+
+      graph.nodes().forEach((node) => {
+        node.scratch("initialPosition", {
+          x: node.position("x"),
+          y: node.position("y")
+        });
+      });
     });
 
     graph.on("layoutstop", () => {
       graph.fit(graph.elements(":visible"), 70);
     });
+
+  const runAnalysisForm =
+    document.getElementById("run-analysis-form");
+
+  const runAnalysisButton =
+    document.getElementById("run-analysis-button");
+
+  const loadingOverlay =
+    document.getElementById("analysis-loading-overlay");
+
+  const loadingText =
+    document.getElementById("analysis-loading-text");
+
+  const loadingMessages = [
+    "Capturing network traffic...",
+    "Building network flows...",
+    "Comparing against baseline...",
+    "Detecting anomalies...",
+    "Generating dashboard..."
+  ];
+
+  let loadingIndex = 0;
+  let loadingInterval = null;
+
+  runAnalysisForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    loadingOverlay?.classList.add("show");
+
+    if (runAnalysisButton) {
+      runAnalysisButton.disabled = true;
+      runAnalysisButton.textContent = "Running analysis...";
+    }
+
+    loadingIndex = 0;
+
+    if (loadingText) {
+      loadingText.textContent = loadingMessages[0];
+    }
+
+    loadingInterval = setInterval(() => {
+      loadingIndex =
+        (loadingIndex + 1) % loadingMessages.length;
+
+      if (loadingText) {
+        loadingText.textContent =
+          loadingMessages[loadingIndex];
+      }
+    }, 50);
+
+    try {
+      const response = await fetch(runAnalysisForm.action, {
+        method: "POST",
+        body: new FormData(runAnalysisForm),
+        credentials: "same-origin"
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.status}`);
+      }
+
+      clearInterval(loadingInterval);
+      window.location.href = "/";
+    } catch (error) {
+      clearInterval(loadingInterval);
+      loadingOverlay?.classList.remove("show");
+
+      if (runAnalysisButton) {
+        runAnalysisButton.disabled = false;
+        runAnalysisButton.textContent = "Run Analysis";
+      }
+
+      alert("Analysis failed. Check the Phoenix terminal for details.");
+      console.error(error);
+    }
+  });
+
   });
 </script>
